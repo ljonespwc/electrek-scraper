@@ -21,6 +21,14 @@ def create_app(config_class=Config):
             return value
         return ""
     
+    @app.template_filter('thousands_separator')
+    def thousands_separator(value):
+        """Add thousands separator to a number"""
+        try:
+            return f"{int(value):,}"
+        except (ValueError, TypeError):
+            return value
+    
     # Add current year for footer
     @app.context_processor
     def inject_current_year():

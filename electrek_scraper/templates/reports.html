@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <header class="dashboard-header">
+        <h1>Electrek Echo Insights</h1>
+        <p class="dashboard-description">
+            Analyze article engagement on Electrek.co with our interactive dashboard. Track comment trends, identify
+            high-performing topics, and explore correlations between headlines and reader engagement.
+        </p>
+    </header>
+
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-header">
+                <span>Total Articles</span>
+                <i class="fas fa-newspaper"></i>
+            </div>
+            <div class="stat-value">{{ stats.total_articles|default(0)|thousands_separator }}</div>
+            <div class="stat-caption">Scraped from Electrek.co</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <span>Total Comments</span>
+                <i class="fas fa-comments"></i>
+            </div>
+            <div class="stat-value">{{ stats.total_comments|default(0)|thousands_separator }}</div>
+            <div class="stat-caption">Across all articles</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <span>Avg. Comments</span>
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-value">{{ stats.avg_comments|default(0) }}</div>
+            <div class="stat-caption">Per article</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <span>Most Comments</span>
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div class="stat-value">{{ stats.max_comments|default(0) }}</div>
+            <div class="stat-caption">On a single article</div>
+        </div>
+    </div>
+
+    <div class="tabs-container">
+        <div class="tab active" data-tab="comment-trends">Comment Trends</div>
+        <div class="tab" data-tab="top-articles">Top Articles</div>
+        <div class="tab" data-tab="correlation">Correlation</div>
+        <div class="tab" data-tab="keyword-analysis">Keyword Analysis</div>
+    </div>
+
+    <div class="date-range-container">
+        <h3>Date Range</h3>
+        <p>Select time period to analyze</p>
+        <div class="date-buttons">
+            <a href="{{ url_for('main.reports', months=3) }}" class="date-btn {% if months == 3 %}active{% endif %}">3
+                Months</a>
+            <a href="{{ url_for('main.reports', months=6) }}" class="date-btn {% if months == 6 %}active{% endif %}">6
+                Months</a>
+            <a href="{{ url_for('main.reports', months=12) }}" class="date-btn {% if months == 12 %}active{% endif %}">1
+                Year</a>
+            <a href="{{ url_for('main.reports', months=24) }}" class="date-btn {% if months == 24 %}active{% endif %}">2
+                Years</a>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <h2>Comment Trends Over Time</h2>
+        <p>Average comments per article over time</p>
+        <canvas id="trendsChart"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Tab switching functionality
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                tab.classList.add('active');
+
+                // Here you would normally show/hide content based on the selected tab
+                const tabName = tab.dataset.tab;
+                console.log(`Selected tab: ${tabName}`);
+                // This would be replaced with actual content switching logic
+            });
+        });
+
+        // Initialize trends chart with real data
+        const ctx = document.getElementById('trendsChart').getContext('2d');
+
+        const chartLabels = {{ chart_labels| tojson
+    }};
+    const avgCommentsData = {{ avg_comments_data| tojson }};
+    const articleCountData = {{ article_count_data| tojson }};
+
+    let trendsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [
+                {
+                    label: 'Average Comments',
+                    data: avgCommentsData,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.3,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Articles Published',
+                    data: articleCountData,
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.3,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            stacked: false,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Average Comments'
+                    },
+                    min: 0
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Articles Published'
+                    },
+                    min: 0,
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Month'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+  });
+</script>
+{% endblock %}

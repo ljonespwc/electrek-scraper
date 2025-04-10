@@ -151,7 +151,38 @@ def api_articles():
     articles = Article.get_all(limit=limit)
     return jsonify(articles)
 
-@bp.route('/test')
-def test_route():
-    print("Test route accessed!")
-    return "Test route works! Check your console for the print statement."
+@bp.route('/reports')
+def reports():
+    """Show reporting dashboard with analytics"""
+    # Get the date range parameter, default to 6 months
+    months = request.args.get('months', 6, type=int)
+    
+    # Get statistics
+    stats = Article.get_statistics()
+    
+    # Get monthly data for the chart
+    monthly_data = Article.get_monthly_stats(months)
+    
+    # Format the data for the chart
+    chart_labels = []
+    avg_comments_data = []
+    article_count_data = []
+    
+    for item in monthly_data:
+        # Format the month for display 
+        if isinstance(item['month'], str):
+            chart_labels.append(item['month'])
+        else:
+            # If it's a datetime object, format it
+            month_date = item['month']
+            chart_labels.append(month_date.strftime('%b %Y'))
+            
+        avg_comments_data.append(item['avg_comments'])
+        article_count_data.append(item['article_count'])
+    
+    return render_template('reports.html', 
+                          stats=stats,
+                          chart_labels=chart_labels,
+                          avg_comments_data=avg_comments_data,
+                          article_count_data=article_count_data,
+                          months=months)

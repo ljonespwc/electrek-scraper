@@ -1,0 +1,224 @@
+/* Dashboard Container */
+.dashboard-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+    text-align: left;
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: var(--primary);
+}
+
+.dashboard-description {
+    color: var(--muted-foreground);
+    max-width: 90%;
+    line-height: 1.5;
+}
+
+/* Stats Cards */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background-color: white;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--muted-foreground);
+    margin-bottom: 0.75rem;
+}
+
+.stat-header i {
+    color: var(--primary);
+    opacity: 0.7;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-caption {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+/* Updated Tabs Container */
+.tabs-container {
+    display: flex;
+    margin-bottom: 2rem;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.tab {
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    background-color: white;
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    text-align: center;
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
+
+.tab.active {
+    color: var(--primary);
+    background-color: white;
+    border-color: var(--primary);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.tab:hover:not(.active) {
+    border-color: var(--muted-foreground);
+}
+
+/* Updated Date Range Container */
+.date-range-container {
+    background-color: white;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border);
+    text-align: left;
+}
+
+.date-range-container h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--foreground);
+}
+
+.date-range-container p {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.date-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.date-btn {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    background-color: white;
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.date-btn.active {
+    background-color: #1e2f4d;
+    color: white;
+    border-color: #1e2f4d;
+}
+
+.date-btn:hover:not(.active) {
+    border-color: var(--muted-foreground);
+}
+
+/* Chart Container */
+.chart-container {
+    background-color: white;
+    border-radius: var(--radius);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.chart-container h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-align: left;
+}
+
+.chart-container p {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+canvas {
+    width: 100%;
+    height: 400px;
+}
+
+/* Custom CSS Variables to match the provided theme */
+:root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --radius: 0.5rem;
+    --border: 214.3 31.8% 91.4%;
+}
+
+/* Apply CSS custom properties */
+.dashboard-container {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+}
+
+@media (max-width: 768px) {
+    .stats-cards {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+    }
+
+    .tabs-container {
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .date-buttons {
+        flex-wrap: wrap;
+    }
+}
