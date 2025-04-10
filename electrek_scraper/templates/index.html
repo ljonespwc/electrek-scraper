@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Latest Articles{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="display-5">
+            <i class="fas fa-newspaper text-primary me-2"></i>Electrek Articles
+        </h1>
+        {% if last_scraped %}
+        <p class="text-muted">Last scraped: {{ last_scraped }}</p>
+        {% endif %}
+    </div>
+    <div class="col-md-6 text-md-end d-flex align-items-center justify-content-md-end">
+        <div class="scraper-controls">
+            <form action="{{ url_for('main.scrape') }}" method="post" class="d-inline-flex">
+                <div class="input-group me-2">
+                    <span class="input-group-text">Articles</span>
+                    <input type="number" class="form-control" name="article_limit" value="25" min="1" max="1000">
+                </div>
+                <div class="input-group me-2">
+                    <span class="input-group-text">Pages</span>
+                    <input type="number" class="form-control" name="page_count" value="1" min="1" max="40">
+                </div>
+                <button type="submit" id="scrape-button" class="btn btn-primary">
+                    <i class="fas fa-sync-alt me-1"></i> Scrape New Articles
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if articles %}
+<div class="article-list">
+    <div class="table-responsive">
+
+        <div class="d-flex justify-content-end mb-3">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('main.index', sort='newest') }}"
+                    class="btn btn-outline-secondary btn-sm {% if sort == 'newest' %}active{% endif %}">Newest First</a>
+                <a href="{{ url_for('main.index', sort='oldest') }}"
+                    class="btn btn-outline-secondary btn-sm {% if sort == 'oldest' %}active{% endif %}">Oldest First</a>
+            </div>
+        </div>
+
+        <table class="table table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Published</th>
+                    <th>Comments</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in articles %}
+                <tr>
+                    <td>{{ article.title }}</td>
+                    <td>{{ article.author }}</td>
+                    <td>
+                        {% if article.published_at %}
+                        {% if article.published_at is string %}
+                        {{ article.published_at[:10] }}
+                        {% else %}
+                        {{ article.published_at.strftime('%b %d, %Y') }}
+                        {% endif %}
+                        {% else %}
+                        Unknown
+                        {% endif %}
+                    </td>
+                    <td>{{ article.comment_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i> No articles have been scraped yet. Click "Scrape New Articles" to get
+    started.
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add loading indicator when scraping
+    document.addEventListener('DOMContentLoaded', function () {
+        const scrapeButton = document.getElementById('scrape-button');
+        if (scrapeButton) {
+            const scrapeForm = scrapeButton.closest('form');
+            if (scrapeForm) {
+                scrapeForm.addEventListener('submit', function () {
+                    scrapeButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Scraping...';
+                    scrapeButton.disabled = true;
+
+                    // Add a timeout to reset the button if the server doesn't respond
+                    setTimeout(function () {
+                        if (scrapeButton.disabled) {
+                            scrapeButton.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Scrape New Articles';
+                            scrapeButton.disabled = false;
+                            console.log('Reset button due to timeout');
+                            alert('The scraping operation is taking longer than expected. It may still be running in the background.');
+                        }
+                    }, 60000); // Increased to 60 seconds for larger jobs
+                });
+            }
+        }
+
+        // If there's a 'last_scraped' parameter, it means we just finished scraping
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('last_scraped')) {
+            // Remove the parameter from the URL without reloading
+            if (history.replaceState) {
+                const url = window.location.href.split('?')[0];
+                history.replaceState(null, document.title, url);
+            }
+        }
+    });
+</script>
+{% endblock %}
