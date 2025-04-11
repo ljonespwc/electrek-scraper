@@ -41,6 +41,8 @@
                     class="btn btn-outline-secondary btn-sm {% if sort == 'newest' %}active{% endif %}">Newest First</a>
                 <a href="{{ url_for('main.index', sort='oldest') }}"
                     class="btn btn-outline-secondary btn-sm {% if sort == 'oldest' %}active{% endif %}">Oldest First</a>
+                <a href="{{ url_for('main.index', sort='most_comments') }}"
+                    class="btn btn-outline-secondary btn-sm {% if sort == 'most_comments' %}active{% endif %}">Most Comments</a>
             </div>
         </div>
 

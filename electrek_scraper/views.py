@@ -11,13 +11,23 @@ def index():
     """Homepage showing recent articles and scraper controls"""
     # Get the sort order
     sort = request.args.get('sort', 'newest')
-    ascending = sort == 'oldest'
+    
+    # Set the ordering based on sort parameter
+    if sort == 'oldest':
+        order_by = "published_at"
+        ascending = True
+    elif sort == 'most_comments':
+        order_by = "comment_count"
+        ascending = False
+    else:  # default to newest
+        order_by = "published_at"
+        ascending = False
     
     # Get the last time we scraped
     last_scraped = request.args.get('last_scraped', None)
     
-    # Get recent articles
-    articles = Article.get_all(limit=50, order_by="published_at", ascending=ascending)
+    # Get recent articles with the selected sorting
+    articles = Article.get_all(limit=1000, order_by=order_by, ascending=ascending)
     
     return render_template('index.html', 
                           articles=articles,
