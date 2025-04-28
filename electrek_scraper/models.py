@@ -23,6 +23,71 @@ class Article:
         return response.data
     
     @staticmethod
+    def update_sentiment_score(article_id, sentiment_score):
+        """Update the sentiment score for an article"""
+        try:
+            print(f"Updating article {article_id} with sentiment score {sentiment_score}")
+            
+            # Convert to proper types
+            article_id = int(article_id)
+            sentiment_score = float(sentiment_score)
+            
+            # Prepare update data
+            update_data = {'sentiment_score': sentiment_score}
+            
+            # Perform the update
+            response = supabase.table("articles") \
+                .update(update_data) \
+                .eq("id", article_id) \
+                .execute()
+                
+            return response.data
+            
+        except Exception as e:
+            print(f"Error updating sentiment score: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+            return None
+
+    @staticmethod
+    def get_sentiment_data(months=6):
+        """Get sentiment and comment data for correlation analysis"""
+        try:
+            # Calculate the date range
+            from datetime import datetime, timedelta
+            start_date = (datetime.now() - timedelta(days=30 * months)).isoformat()
+            
+            # Get articles with both sentiment scores and comment counts
+            response = supabase.table("articles") \
+                .select("id, title, sentiment_score, comment_count, published_at") \
+                .gte("published_at", start_date) \
+                .not_.is_("sentiment_score", "null") \
+                .execute()
+                
+            return response.data
+        except Exception as e:
+            print(f"Error getting sentiment data: {str(e)}")
+            return []
+
+    @staticmethod
+    def update_sentiment_score_direct(article_id, sentiment_score):
+        """Update the sentiment score using a direct SQL query"""
+        try:
+            # Create the SQL query
+            sql = f"UPDATE articles SET sentiment_score = {sentiment_score} WHERE id = '{article_id}';"
+            
+            print(f"Attempting direct SQL update: {sql}")
+            
+            # Execute the SQL
+            response = supabase.rpc('execute_sql', {'sql_query': sql}).execute()
+            
+            print(f"Direct SQL update response: {response}")
+            return True
+        except Exception as e:
+            print(f"Error in direct SQL update: {str(e)}")
+            return False
+    
+    @staticmethod
     def get_by_id(article_id):
         """Get a single article by ID"""
         response = supabase.table("articles") \

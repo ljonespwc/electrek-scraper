@@ -19,6 +19,9 @@ def index():
     elif sort == 'most_comments':
         order_by = "comment_count"
         ascending = False
+    elif sort == 'most_negative':
+        order_by = "sentiment_score"
+        ascending = True  # Ascending for negative first
     else:  # default to newest
         order_by = "published_at"
         ascending = False
@@ -27,7 +30,7 @@ def index():
     last_scraped = request.args.get('last_scraped', None)
     
     # Get recent articles with the selected sorting
-    articles = Article.get_all(limit=1000, order_by=order_by, ascending=ascending)
+    articles = Article.get_all(limit=1500, order_by=order_by, ascending=ascending)
     
     return render_template('index.html', 
                           articles=articles,
@@ -190,9 +193,77 @@ def reports():
         avg_comments_data.append(item['avg_comments'])
         article_count_data.append(item['article_count'])
     
+    # Get sentiment correlation data
+    sentiment_data = Article.get_sentiment_data(months)
+    
+    # Get sentiment service to categorize sentiments
+    from .utils.sentiment_service import SentimentService
+    sentiment_service = SentimentService()
+    
+    # Process sentiment data for the chart
+    scatter_data = []
+    for article in sentiment_data:
+        if article.get('sentiment_score') is not None and article.get('comment_count') is not None:
+            # Add the article to the scatter data
+            sentiment_category = sentiment_service.get_sentiment_category(article.get('sentiment_score'))
+            scatter_data.append({
+                'id': article.get('id'),
+                'title': article.get('title', 'Untitled'),
+                'sentiment_score': article.get('sentiment_score'),
+                'comment_count': article.get('comment_count'),
+                'sentiment_category': sentiment_category
+            })
+    
+    # Calculate correlation if there's enough data
+    correlation = None
+    if len(scatter_data) >= 5:
+        try:
+            import numpy as np
+            sentiment_scores = [article['sentiment_score'] for article in scatter_data]
+            comment_counts = [article['comment_count'] for article in scatter_data]
+            correlation = np.corrcoef(sentiment_scores, comment_counts)[0, 1]
+        except Exception as e:
+            print(f"Error calculating correlation: {str(e)}")
+    
     return render_template('reports.html', 
                           stats=stats,
                           chart_labels=chart_labels,
                           avg_comments_data=avg_comments_data,
                           article_count_data=article_count_data,
-                          months=months)
+                          months=months,
+                          sentiment_data=scatter_data,
+                          correlation=correlation)
+    
+@bp.route('/analyze_sentiments', methods=['POST'])
+def analyze_sentiments():
+    """Trigger sentiment analysis for all articles with enhanced debugging"""
+    from .utils.analyze_sentiments import analyze_all_articles
+    
+    try:
+        # Start the analysis
+        success = analyze_all_articles()
+        
+        if success:
+            # Double-check if updates actually happened
+            from .config import Config
+            from supabase import create_client
+            supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_KEY)
+            
+            # Count articles with sentiment scores
+            count_response = supabase.table("articles") \
+                .select("count") \
+                .not_.is_("sentiment_score", "null") \
+                .execute()
+                
+            count = count_response.count if hasattr(count_response, 'count') else 0
+            
+            flash(f'Sentiment analysis completed. {count} articles now have sentiment scores.', 'success')
+        else:
+            flash('Sentiment analysis encountered errors. Check logs for details.', 'warning')
+            
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        flash(f'Error running sentiment analysis: {str(e)}', 'danger')
+        
+    return redirect(url_for('main.reports'))
