@@ -30,7 +30,24 @@ def index():
     last_scraped = request.args.get('last_scraped', None)
     
     # Get recent articles with the selected sorting
-    articles = Article.get_all(limit=1500, order_by=order_by, ascending=ascending)
+    articles = Article.get_all(limit=50, order_by=order_by, ascending=ascending)
+    
+    # Get sentiment service to categorize sentiments for display
+    try:
+        from .utils.sentiment_service import SentimentService
+        sentiment_service = SentimentService()
+        
+        # Add sentiment categories to articles
+        for article in articles:
+            if article.get('sentiment_score') is not None:
+                score = article.get('sentiment_score')
+                article['sentiment_category'] = sentiment_service.get_sentiment_category(score)
+                article['sentiment_color'] = sentiment_service.get_sentiment_color(score)
+            else:
+                article['sentiment_category'] = 'Not analyzed'
+                article['sentiment_color'] = '#6c757d'  # Default gray
+    except Exception as e:
+        print(f"Error adding sentiment categories: {str(e)}")
     
     return render_template('index.html', 
                           articles=articles,

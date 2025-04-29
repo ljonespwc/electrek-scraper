@@ -84,12 +84,13 @@
                     <td>{{ article.comment_count }}</td>
                     <td>
                         {% if article.sentiment_score is not none %}
-                        <span
-                            class="badge {% if article.sentiment_score > 0.1 %}bg-success{% elif article.sentiment_score < -0.1 %}bg-danger{% else %}bg-secondary{% endif %}">
+                        <span class="sentiment-badge"
+                            style="background-color: {% if article.sentiment_color %}{{ article.sentiment_color }}{% elif article.sentiment_category == 'very positive' %}#28a745{% elif article.sentiment_category == 'positive' %}#5cb85c{% elif article.sentiment_category == 'slightly positive' %}#8bc34a{% elif article.sentiment_category == 'very negative' %}#dc3545{% elif article.sentiment_category == 'negative' %}#e74c3c{% elif article.sentiment_category == 'slightly negative' %}#f08080{% else %}#6c757d{% endif %}">
                             {{ article.sentiment_score|round(2) }}
+                            <small>{{ article.sentiment_category }}</small>
                         </span>
                         {% else %}
-                        <span class="badge bg-light text-dark">Not analyzed</span>
+                        <span class="sentiment-badge bg-light text-dark">Not analyzed</span>
                         {% endif %}
                     </td>
                 </tr>

@@ -164,26 +164,86 @@
         data: {
             datasets: [
                 {
+                    label: 'Very Positive Headlines',
+                    data: sentimentData.filter(a => a.sentiment_score >= 0.7).map(a => ({
+                        x: a.sentiment_score,
+                        y: a.comment_count,
+                        title: a.title
+                    })),
+                    backgroundColor: 'rgba(40, 167, 69, 0.6)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                },
+                {
                     label: 'Positive Headlines',
-                    data: positiveData,
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
+                    data: sentimentData.filter(a => a.sentiment_score >= 0.3 && a.sentiment_score < 0.7).map(a => ({
+                        x: a.sentiment_score,
+                        y: a.comment_count,
+                        title: a.title
+                    })),
+                    backgroundColor: 'rgba(92, 184, 92, 0.6)',
+                    borderColor: 'rgba(92, 184, 92, 1)',
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: 'Slightly Positive Headlines',
+                    data: sentimentData.filter(a => a.sentiment_score >= 0.1 && a.sentiment_score < 0.3).map(a => ({
+                        x: a.sentiment_score,
+                        y: a.comment_count,
+                        title: a.title
+                    })),
+                    backgroundColor: 'rgba(139, 195, 74, 0.6)',
+                    borderColor: 'rgba(139, 195, 74, 1)',
                     pointRadius: 6,
                     pointHoverRadius: 8
                 },
                 {
                     label: 'Neutral Headlines',
-                    data: neutralData,
-                    backgroundColor: 'rgba(153, 102, 255, 0.6)',
-                    borderColor: 'rgba(153, 102, 255, 1)',
+                    data: sentimentData.filter(a => a.sentiment_score > -0.1 && a.sentiment_score < 0.1).map(a => ({
+                        x: a.sentiment_score,
+                        y: a.comment_count,
+                        title: a.title
+                    })),
+                    backgroundColor: 'rgba(108, 117, 125, 0.6)',
+                    borderColor: 'rgba(108, 117, 125, 1)',
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: 'Slightly Negative Headlines',
+                    data: sentimentData.filter(a => a.sentiment_score <= -0.1 && a.sentiment_score > -0.3).map(a => ({
+                        x: a.sentiment_score,
+                        y: a.comment_count,
+                        title: a.title
+                    })),
+                    backgroundColor: 'rgba(240, 128, 128, 0.6)',
+                    borderColor: 'rgba(240, 128, 128, 1)',
                     pointRadius: 6,
                     pointHoverRadius: 8
                 },
                 {
                     label: 'Negative Headlines',
-                    data: negativeData,
-                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
+                    data: sentimentData.filter(a => a.sentiment_score <= -0.3 && a.sentiment_score > -0.7).map(a => ({
+                        x: a.sentiment_score,
+                        y: a.comment_count,
+                        title: a.title
+                    })),
+                    backgroundColor: 'rgba(231, 76, 60, 0.6)',
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: 'Very Negative Headlines',
+                    data: sentimentData.filter(a => a.sentiment_score <= -0.7).map(a => ({
+                        x: a.sentiment_score,
+                        y: a.comment_count,
+                        title: a.title
+                    })),
+                    backgroundColor: 'rgba(220, 53, 69, 0.6)',
+                    borderColor: 'rgba(220, 53, 69, 1)',
                     pointRadius: 6,
                     pointHoverRadius: 8
                 }

@@ -136,3 +136,19 @@ body {
 .alert {
     animation: fadeIn 0.3s ease-in;
 }
+
+/* Sentiment badge styles */
+.sentiment-badge {
+    display: inline-block;
+    color: white;
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+}
+
+.sentiment-badge small {
+    opacity: 0.9;
+    font-size: 0.85em;
+    margin-left: 0.35em;
+}
