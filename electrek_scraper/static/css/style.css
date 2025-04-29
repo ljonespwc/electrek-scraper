@@ -153,11 +153,16 @@ body {
     margin-left: 0.35em;
 }
 
-/* Tesla filter button */
+/* Button styles */
 #toggleTeslaBtn {
     transition: all 0.2s ease;
 }
 
 #toggleTeslaBtn:hover {
-    background-color: rgba(var(--primary), 0.1);
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* Animation for table rows */
+tbody tr {
+    transition: opacity 0.3s ease;
 }
