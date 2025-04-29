@@ -50,25 +50,56 @@ class Article:
             return None
 
     @staticmethod
-    def get_sentiment_data(months=6):
-        """Get sentiment and comment data for correlation analysis"""
+    def get_sentiment_data(months=None):
+        """Get sentiment data for correlation analysis using pagination"""
         try:
-            # Calculate the date range
-            from datetime import datetime, timedelta
-            start_date = (datetime.now() - timedelta(days=30 * months)).isoformat()
+            all_data = []
+            page_size = 1000
+            current_page = 0
             
-            # Get articles with both sentiment scores and comment counts
-            response = supabase.table("articles") \
-                .select("id, title, sentiment_score, comment_count, published_at") \
-                .gte("published_at", start_date) \
-                .not_.is_("sentiment_score", "null") \
-                .execute()
+            while True:
+                # Build query for articles with sentiment scores
+                query = supabase.table("articles") \
+                    .select("id, title, sentiment_score, comment_count, published_at") \
+                    .not_.is_("sentiment_score", "null")
+                
+                # Apply date filter only if months is specified
+                if months is not None:
+                    from datetime import datetime, timedelta
+                    start_date = (datetime.now() - timedelta(days=30 * months)).isoformat()
+                    query = query.gte("published_at", start_date)
+                
+                # Add pagination
+                query = query.range(current_page * page_size, (current_page + 1) * page_size - 1)
+                
+                # Execute query
+                response = query.execute()
+                
+                # Get the data from this page
+                page_data = response.data
+                
+                # If no more data, break the loop
+                if not page_data:
+                    break
+                    
+                # Add this page's data to our results
+                all_data.extend(page_data)
+                
+                # If we got fewer results than the page size, we're done
+                if len(page_data) < page_size:
+                    break
+                    
+                # Move to next page
+                current_page += 1
             
-            # Just return the raw data - no need for processing
-            return response.data
+            print(f"Retrieved {len(all_data)} articles with sentiment scores using pagination")
+            
+            return all_data
                 
         except Exception as e:
             print(f"Error getting sentiment data: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
             return []
 
     @staticmethod

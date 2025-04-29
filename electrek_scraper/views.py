@@ -184,13 +184,13 @@ def api_articles():
 @bp.route('/reports')
 def reports():
     """Show reporting dashboard with analytics"""
-    # Get the date range parameter, default to 6 months
+    # Get the date range parameter, default to 6 months for trends
     months = request.args.get('months', 6, type=int)
     
     # Get statistics
     stats = Article.get_statistics()
     
-    # Get monthly data for the chart
+    # Get monthly data for the chart (using the specified months)
     monthly_data = Article.get_monthly_stats(months)
     
     # Format the data for the chart
@@ -210,8 +210,8 @@ def reports():
         avg_comments_data.append(item['avg_comments'])
         article_count_data.append(item['article_count'])
     
-    # Get sentiment correlation data
-    sentiment_data = Article.get_sentiment_data(months)
+    # Get ALL sentiment correlation data (pass None for months to get all)
+    sentiment_data = Article.get_sentiment_data(None)  # Changed to None to get all articles
     
     # Get sentiment service to categorize sentiments
     from .utils.sentiment_service import SentimentService
@@ -242,6 +242,9 @@ def reports():
         except Exception as e:
             print(f"Error calculating correlation: {str(e)}")
     
+    # Add count of analyzed articles to logs
+    print(f"Sentiment analysis using {len(scatter_data)} articles")
+    
     return render_template('reports.html', 
                           stats=stats,
                           chart_labels=chart_labels,
@@ -250,7 +253,6 @@ def reports():
                           months=months,
                           sentiment_data=scatter_data,
                           correlation=correlation)
-    
 @bp.route('/analyze_sentiments', methods=['POST'])
 def analyze_sentiments():
     """Trigger sentiment analysis for all articles with enhanced debugging"""
