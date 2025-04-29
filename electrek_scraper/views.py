@@ -29,15 +29,14 @@ def index():
     # Get the last time we scraped
     last_scraped = request.args.get('last_scraped', None)
     
-    # Get recent articles with the selected sorting
-    articles = Article.get_all(limit=1200, order_by=order_by, ascending=ascending)
+    # Get all articles with the selected sorting (using None for limit to get all)
+    articles = Article.get_all(limit=None, order_by=order_by, ascending=ascending)
     
-    # Get sentiment service to categorize sentiments for display
+    # Add sentiment categories if needed
     try:
         from .utils.sentiment_service import SentimentService
         sentiment_service = SentimentService()
         
-        # Add sentiment categories to articles
         for article in articles:
             if article.get('sentiment_score') is not None:
                 score = article.get('sentiment_score')

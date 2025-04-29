@@ -10,17 +10,65 @@ class Article:
     """Model to interact with the articles table in Supabase"""
     
     @staticmethod
-    def get_all(limit=20, order_by="published_at", ascending=False):
-        """Get all articles with optional sorting and limit"""
-        order_direction = "asc" if ascending else "desc"
-        
-        response = supabase.table("articles") \
-            .select("*") \
-            .order(order_by, desc=(not ascending)) \
-            .limit(limit) \
-            .execute()
-            
-        return response.data
+    def get_all(limit=None, order_by="published_at", ascending=False):
+        """Get all articles with optional sorting and pagination"""
+        try:
+            # If limit is None or very large, use pagination to get all articles
+            if limit is None or limit > 1000:
+                all_data = []
+                page_size = 1000
+                current_page = 0
+                
+                while True:
+                    # Build query with proper ordering
+                    query = supabase.table("articles") \
+                        .select("*") \
+                        .order(order_by, desc=(not ascending)) \
+                        .range(current_page * page_size, (current_page + 1) * page_size - 1)
+                    
+                    # Execute query
+                    response = query.execute()
+                    
+                    # Get the data from this page
+                    page_data = response.data
+                    
+                    # If no more data, break the loop
+                    if not page_data:
+                        break
+                        
+                    # Add this page's data to our results
+                    all_data.extend(page_data)
+                    
+                    # If we got fewer results than the page size, we're done
+                    if len(page_data) < page_size:
+                        break
+                        
+                    # If we've reached the specified limit, we're done
+                    if limit is not None and len(all_data) >= limit:
+                        all_data = all_data[:limit]  # Trim to exact limit
+                        break
+                        
+                    # Move to next page
+                    current_page += 1
+                
+                print(f"Retrieved {len(all_data)} articles using pagination")
+                return all_data
+                
+            else:
+                # Use simple limit for smaller requests
+                response = supabase.table("articles") \
+                    .select("*") \
+                    .order(order_by, desc=(not ascending)) \
+                    .limit(limit) \
+                    .execute()
+                    
+                return response.data
+                    
+        except Exception as e:
+            print(f"Error getting articles: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+            return []
     
     @staticmethod
     def update_sentiment_score(article_id, sentiment_score):

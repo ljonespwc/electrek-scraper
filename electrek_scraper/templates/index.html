@@ -55,10 +55,23 @@
                     class="btn btn-outline-secondary btn-sm {% if sort == 'most_negative' %}active{% endif %}">Most Negative</a>
             </div>
 
-            <!-- Right side: Tesla filter button -->
-            <button id="toggleTeslaBtn" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-filter me-1"></i> Show Only Tesla/Elon Articles
-            </button>
+            <!-- Right side: Tesla filter buttons (replacing toggle) -->
+            <div class="btn-group" role="group" id="teslaFilterBtns">
+                <input type="radio" class="btn-check" name="teslaFilter" id="showAllBtn" checked>
+                <label class="btn btn-outline-primary btn-sm" for="showAllBtn">
+                    <i class="fas fa-list me-1"></i> All Articles
+                </label>
+
+                <input type="radio" class="btn-check" name="teslaFilter" id="showOnlyTeslaBtn">
+                <label class="btn btn-outline-primary btn-sm" for="showOnlyTeslaBtn">
+                    <i class="fas fa-filter me-1"></i> Only Tesla/Elon
+                </label>
+
+                <input type="radio" class="btn-check" name="teslaFilter" id="showNoTeslaBtn">
+                <label class="btn btn-outline-primary btn-sm" for="showNoTeslaBtn">
+                    <i class="fas fa-ban me-1"></i> No Tesla/Elon
+                </label>
+            </div>
         </div>
 
         <table class="table table-striped table-hover">
@@ -139,12 +152,15 @@
             }
         }
 
-        // Add Tesla/Elon filter functionality
-        const toggleTeslaBtn = document.getElementById('toggleTeslaBtn');
-        if (toggleTeslaBtn) {
-            toggleTeslaBtn.addEventListener('click', function () {
+        // Set up the filter buttons
+        const showAllBtn = document.getElementById('showAllBtn');
+        const showOnlyTeslaBtn = document.getElementById('showOnlyTeslaBtn');
+        const showNoTeslaBtn = document.getElementById('showNoTeslaBtn');
+
+        if (showAllBtn && showOnlyTeslaBtn && showNoTeslaBtn) {
+            // Function to filter table rows
+            function filterTableRows(filterType) {
                 const tableRows = document.querySelectorAll('tbody tr');
-                const isShowingAll = toggleTeslaBtn.textContent.includes('Only');
                 let visibleCount = 0;
 
                 tableRows.forEach(row => {
@@ -153,24 +169,43 @@
                         title.includes('elon') ||
                         title.includes('musk');
 
-                    if (isShowingAll) {
-                        // Filter to only show Tesla/Elon
-                        row.style.display = isTeslaOrElon ? '' : 'none';
-                        if (isTeslaOrElon) visibleCount++;
-                    } else {
-                        // Show all
+                    if (filterType === 'all') {
+                        // Show all rows
                         row.style.display = '';
                         visibleCount++;
+                    } else if (filterType === 'only-tesla' && isTeslaOrElon) {
+                        // Only show Tesla/Elon rows
+                        row.style.display = '';
+                        visibleCount++;
+                    } else if (filterType === 'no-tesla' && !isTeslaOrElon) {
+                        // Only show non-Tesla/Elon rows
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        // Hide rows that don't match the filter
+                        row.style.display = 'none';
                     }
                 });
 
-                // Update button text
-                if (isShowingAll) {
-                    toggleTeslaBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Show All Articles';
-                    console.log(`Showing ${visibleCount} Tesla/Elon articles only`);
-                } else {
-                    toggleTeslaBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Show Only Tesla/Elon Articles';
-                    console.log(`Showing all ${visibleCount} articles`);
+                console.log(`Showing ${visibleCount} articles`);
+            }
+
+            // Add event listeners to the radio buttons
+            showAllBtn.addEventListener('change', function () {
+                if (this.checked) {
+                    filterTableRows('all');
+                }
+            });
+
+            showOnlyTeslaBtn.addEventListener('change', function () {
+                if (this.checked) {
+                    filterTableRows('only-tesla');
+                }
+            });
+
+            showNoTeslaBtn.addEventListener('change', function () {
+                if (this.checked) {
+                    filterTableRows('no-tesla');
                 }
             });
         }
