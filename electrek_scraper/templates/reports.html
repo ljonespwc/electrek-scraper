@@ -94,9 +94,23 @@
                 {% endif %}
             </div>
 
-            <button id="toggleTeslaBtn" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-filter me-1"></i> Remove Tesla Articles
-            </button>
+            <!-- Replace the toggle button with the button group -->
+            <div class="btn-group" role="group" id="teslaFilterBtns">
+                <input type="radio" class="btn-check" name="teslaFilter" id="showAllBtn" checked>
+                <label class="btn btn-outline-primary btn-sm" for="showAllBtn">
+                    <i class="fas fa-list me-1"></i> Show All Articles
+                </label>
+
+                <input type="radio" class="btn-check" name="teslaFilter" id="showOnlyTeslaBtn">
+                <label class="btn btn-outline-primary btn-sm" for="showOnlyTeslaBtn">
+                    <i class="fas fa-filter me-1"></i> Only Tesla/Elon
+                </label>
+
+                <input type="radio" class="btn-check" name="teslaFilter" id="showNoTeslaBtn">
+                <label class="btn btn-outline-primary btn-sm" for="showNoTeslaBtn">
+                    <i class="fas fa-ban me-1"></i> No Tesla/Elon
+                </label>
+            </div>
         </div>
 
         <canvas id="sentimentChart"></canvas>
@@ -164,8 +178,8 @@
 
         // Get the sentiment data from the template
         const allSentimentData = {{ sentiment_data|tojson }};
-        
-        // Manually detect Tesla/Elon/Musk articles in JavaScript
+
+        // Manually detect Tesla articles in JavaScript
         allSentimentData.forEach(article => {
             const title = article.title ? article.title.toLowerCase() : '';
             article.is_tesla_elon = 
@@ -173,47 +187,48 @@
                 title.includes('elon') || 
                 title.includes('musk');
         });
-        
-        // Count Tesla/Elon articles
+
+        // Count Tesla articles
         const teslaElonArticles = allSentimentData.filter(article => article.is_tesla_elon);
         console.log(`Found ${teslaElonArticles.length} Tesla/Elon/Musk articles out of ${allSentimentData.length} total`);
-        
+
         let sentimentData = allSentimentData; // Start with all data
-        let showingOnlyTeslaElon = false; // Track state - starting with ALL articles
         let sentimentChart = null; // Initialize chart variable
 
-        // Set up the toggle button
-        const toggleTeslaBtn = document.getElementById('toggleTeslaBtn');
-        if (toggleTeslaBtn) {
-            // Only show button if there are Tesla/Elon articles
-            if (teslaElonArticles.length === 0) {
-                toggleTeslaBtn.style.display = 'none';
-            } else {
-                // Initial button text for showing ONLY Tesla/Elon
-                toggleTeslaBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Show Only Tesla/Elon Articles';
-            }
-            
-            toggleTeslaBtn.addEventListener('click', function() {
-                if (!showingOnlyTeslaElon) {
-                    // Filter to ONLY show Tesla/Elon articles
-                    sentimentData = allSentimentData.filter(article => article.is_tesla_elon);
-                    console.log(`Filtered to ${sentimentData.length} Tesla/Elon/Musk articles only`);
-                    
-                    toggleTeslaBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Show All Articles';
-                    showingOnlyTeslaElon = true;
-                } else {
-                    // Show all articles
-                    sentimentData = allSentimentData;
-                    console.log(`Restored all ${sentimentData.length} articles`);
-                    
-                    toggleTeslaBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Show Only Tesla/Elon Articles';
-                    showingOnlyTeslaElon = false;
-                }
-                
-                // Update the chart with new data
-                updateSentimentChart();
-            });
+        // Set up the filter buttons
+        const showAllBtn = document.getElementById('showAllBtn');
+        const showOnlyTeslaBtn = document.getElementById('showOnlyTeslaBtn');
+        const showNoTeslaBtn = document.getElementById('showNoTeslaBtn');
+
+        // Only show filter buttons if there are Tesla articles
+        if (teslaElonArticles.length === 0) {
+            document.getElementById('teslaFilterBtns').style.display = 'none';
         }
+
+        // Add event listeners to the radio buttons
+        showAllBtn.addEventListener('change', function() {
+            if (this.checked) {
+                sentimentData = allSentimentData;
+                console.log(`Showing all ${sentimentData.length} articles`);
+                updateSentimentChart();
+            }
+        });
+
+        showOnlyTeslaBtn.addEventListener('change', function() {
+            if (this.checked) {
+                sentimentData = allSentimentData.filter(article => article.is_tesla_elon);
+                console.log(`Showing only ${sentimentData.length} Tesla/Elon articles`);
+                updateSentimentChart();
+            }
+        });
+
+        showNoTeslaBtn.addEventListener('change', function() {
+            if (this.checked) {
+                sentimentData = allSentimentData.filter(article => !article.is_tesla_elon);
+                console.log(`Showing ${sentimentData.length} non-Tesla/Elon articles`);
+                updateSentimentChart();
+            }
+        });
 
         // Function to calculate correlation coefficient
         function calculateCorrelation(data) {
