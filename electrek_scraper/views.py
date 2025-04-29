@@ -64,10 +64,10 @@ def scrape():
     try:
         # Get the number of articles and pages to scrape
         article_limit = int(request.form.get('article_limit', 25))
-        article_limit = min(max(1, article_limit), 1000)  # Increased max to 1000
+        article_limit = min(max(1, article_limit), 2000)  # Increased max to 2000
 
         page_count = int(request.form.get('page_count', 1))
-        page_count = min(max(1, page_count), 40)  # Increased max to 40 pages
+        page_count = min(max(1, page_count), 80)  # Increased max to 80 pages
         
         print(f"Article limit set to: {article_limit}, Pages: {page_count}")
         

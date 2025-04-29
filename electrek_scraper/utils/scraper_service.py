@@ -35,8 +35,8 @@ class ElectrekScraper:
         Get article URLs from multiple pages
         
         Parameters:
-        - limit: Maximum number of articles to collect (up to 1000)
-        - pages: Maximum number of pages to visit (up to 40)
+        - limit: Maximum number of articles to collect (up to 2000)
+        - pages: Maximum number of pages to visit (up to 80)
         - page_delay: Base delay between page requests in seconds
         """
         all_article_urls = []
