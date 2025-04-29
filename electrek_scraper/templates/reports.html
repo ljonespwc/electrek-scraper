@@ -86,12 +86,18 @@
         <h2>Title Sentiment vs Comment Count</h2>
         <p>Exploring correlation between headline sentiment and reader engagement</p>
 
-        {% if correlation is not none %}
-        <div class="correlation-stats mb-3">
-            <span class="badge bg-primary">Correlation: {{ "%.2f"|format(correlation) }}</span>
-            <span class="badge bg-info">{{ sentiment_data|length }} articles analyzed</span>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="correlation-stats">
+                {% if correlation is not none %}
+                <span class="badge bg-primary">Correlation: {{ "%.2f"|format(correlation) }}</span>
+                <span class="badge bg-info">{{ sentiment_data|length }} articles analyzed</span>
+                {% endif %}
+            </div>
+
+            <button id="toggleTeslaBtn" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-filter me-1"></i> Remove Tesla Articles
+            </button>
         </div>
-        {% endif %}
 
         <canvas id="sentimentChart"></canvas>
     </div>
@@ -156,200 +162,287 @@
             });
         });
 
-        // Initialize sentiment scatter chart
-        const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
-
         // Get the sentiment data from the template
-        const sentimentData = {{ sentiment_data| tojson
-    }};
+        const allSentimentData = {{ sentiment_data|tojson }};
+        
+        // Manually detect Tesla/Elon/Musk articles in JavaScript
+        allSentimentData.forEach(article => {
+            const title = article.title ? article.title.toLowerCase() : '';
+            article.is_tesla_elon = 
+                title.includes('tesla') || 
+                title.includes('elon') || 
+                title.includes('musk');
+        });
+        
+        // Count Tesla/Elon articles
+        const teslaElonArticles = allSentimentData.filter(article => article.is_tesla_elon);
+        console.log(`Found ${teslaElonArticles.length} Tesla/Elon/Musk articles out of ${allSentimentData.length} total`);
+        
+        let sentimentData = allSentimentData; // Start with all data
+        let showingOnlyTeslaElon = false; // Track state - starting with ALL articles
+        let sentimentChart = null; // Initialize chart variable
 
-    // Create datasets based on sentiment categories
-    const positiveData = [];
-    const neutralData = [];
-    const negativeData = [];
-
-    sentimentData.forEach(article => {
-        const point = {
-            x: article.sentiment_score,
-            y: article.comment_count,
-            title: article.title
-        };
-
-        if (article.sentiment_category === 'positive') {
-            positiveData.push(point);
-        } else if (article.sentiment_category === 'negative') {
-            negativeData.push(point);
-        } else {
-            neutralData.push(point);
-        }
-    });
-
-    // Create the scatter chart
-    const sentimentChart = new Chart(sentimentCtx, {
-        type: 'scatter',
-        data: {
-            datasets: [
-                {
-                    label: 'Very Positive Headlines',
-                    data: sentimentData.filter(a => a.sentiment_score >= 0.7).map(a => ({
-                        x: a.sentiment_score,
-                        y: a.comment_count,
-                        title: a.title
-                    })),
-                    backgroundColor: 'rgba(40, 167, 69, 0.6)',
-                    borderColor: 'rgba(40, 167, 69, 1)',
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                },
-                {
-                    label: 'Positive Headlines',
-                    data: sentimentData.filter(a => a.sentiment_score >= 0.3 && a.sentiment_score < 0.7).map(a => ({
-                        x: a.sentiment_score,
-                        y: a.comment_count,
-                        title: a.title
-                    })),
-                    backgroundColor: 'rgba(92, 184, 92, 0.6)',
-                    borderColor: 'rgba(92, 184, 92, 1)',
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                },
-                {
-                    label: 'Slightly Positive Headlines',
-                    data: sentimentData.filter(a => a.sentiment_score >= 0.1 && a.sentiment_score < 0.3).map(a => ({
-                        x: a.sentiment_score,
-                        y: a.comment_count,
-                        title: a.title
-                    })),
-                    backgroundColor: 'rgba(139, 195, 74, 0.6)',
-                    borderColor: 'rgba(139, 195, 74, 1)',
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                },
-                {
-                    label: 'Neutral Headlines',
-                    data: sentimentData.filter(a => a.sentiment_score > -0.1 && a.sentiment_score < 0.1).map(a => ({
-                        x: a.sentiment_score,
-                        y: a.comment_count,
-                        title: a.title
-                    })),
-                    backgroundColor: 'rgba(108, 117, 125, 0.6)',
-                    borderColor: 'rgba(108, 117, 125, 1)',
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                },
-                {
-                    label: 'Slightly Negative Headlines',
-                    data: sentimentData.filter(a => a.sentiment_score <= -0.1 && a.sentiment_score > -0.3).map(a => ({
-                        x: a.sentiment_score,
-                        y: a.comment_count,
-                        title: a.title
-                    })),
-                    backgroundColor: 'rgba(240, 128, 128, 0.6)',
-                    borderColor: 'rgba(240, 128, 128, 1)',
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                },
-                {
-                    label: 'Negative Headlines',
-                    data: sentimentData.filter(a => a.sentiment_score <= -0.3 && a.sentiment_score > -0.7).map(a => ({
-                        x: a.sentiment_score,
-                        y: a.comment_count,
-                        title: a.title
-                    })),
-                    backgroundColor: 'rgba(231, 76, 60, 0.6)',
-                    borderColor: 'rgba(231, 76, 60, 1)',
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                },
-                {
-                    label: 'Very Negative Headlines',
-                    data: sentimentData.filter(a => a.sentiment_score <= -0.7).map(a => ({
-                        x: a.sentiment_score,
-                        y: a.comment_count,
-                        title: a.title
-                    })),
-                    backgroundColor: 'rgba(220, 53, 69, 0.6)',
-                    borderColor: 'rgba(220, 53, 69, 1)',
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 1.5,             // Set a fixed aspect ratio (width/height)
-            plugins: {
-                legend: {
-                    display: false  // This hides the legend of datasets
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            const point = context.raw;
-                            return [
-                                `Title: ${point.title}`,
-                                `Sentiment Score: ${point.x.toFixed(2)}`,
-                                `Comments: ${point.y}`
-                            ];
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Sentiment Score'
-                    },
-                    min: -1.1,
-                    max: 1.1,
-                    ticks: {
-                        callback: function (value) {
-                            if (value === -1) return 'Very Negative';
-                            if (value === -0.5) return 'Negative';
-                            if (value === 0) return 'Neutral';
-                            if (value === 0.5) return 'Positive';
-                            if (value === 1) return 'Very Positive';
-                            return '';
-                        }
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Comment Count'
-                    },
-                    min: 0,
-                    // Calculate a reasonable maximum based on data
-                    suggestedMax: function () {
-                        // Get all comment counts
-                        const allCounts = sentimentData.map(a => a.comment_count).sort((a, b) => a - b);
-                        if (allCounts.length === 0) return 500;
-
-                        // Find the 95th percentile value to exclude extreme outliers
-                        const idx = Math.floor(allCounts.length * 0.95);
-                        const percentile95 = allCounts[idx];
-
-                        // Add 10% padding to the max value
-                        return Math.ceil(percentile95 * 1.1);
-                    }()
-                }
+        // Set up the toggle button
+        const toggleTeslaBtn = document.getElementById('toggleTeslaBtn');
+        if (toggleTeslaBtn) {
+            // Only show button if there are Tesla/Elon articles
+            if (teslaElonArticles.length === 0) {
+                toggleTeslaBtn.style.display = 'none';
+            } else {
+                // Initial button text for showing ONLY Tesla/Elon
+                toggleTeslaBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Show Only Tesla/Elon Articles';
             }
+            
+            toggleTeslaBtn.addEventListener('click', function() {
+                if (!showingOnlyTeslaElon) {
+                    // Filter to ONLY show Tesla/Elon articles
+                    sentimentData = allSentimentData.filter(article => article.is_tesla_elon);
+                    console.log(`Filtered to ${sentimentData.length} Tesla/Elon/Musk articles only`);
+                    
+                    toggleTeslaBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Show All Articles';
+                    showingOnlyTeslaElon = true;
+                } else {
+                    // Show all articles
+                    sentimentData = allSentimentData;
+                    console.log(`Restored all ${sentimentData.length} articles`);
+                    
+                    toggleTeslaBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Show Only Tesla/Elon Articles';
+                    showingOnlyTeslaElon = false;
+                }
+                
+                // Update the chart with new data
+                updateSentimentChart();
+            });
         }
+
+        // Function to calculate correlation coefficient
+        function calculateCorrelation(data) {
+            if (data.length < 2) return 0;
+
+            const n = data.length;
+
+            // Get sentiment scores and comment counts
+            const x = data.map(item => item.sentiment_score);
+            const y = data.map(item => item.comment_count);
+
+            // Calculate means
+            const xMean = x.reduce((a, b) => a + b, 0) / n;
+            const yMean = y.reduce((a, b) => a + b, 0) / n;
+
+            // Calculate variances and covariance
+            let xxVar = 0;
+            let yyVar = 0;
+            let xyVar = 0;
+
+            for (let i = 0; i < n; i++) {
+                xxVar += (x[i] - xMean) * (x[i] - xMean);
+                yyVar += (y[i] - yMean) * (y[i] - yMean);
+                xyVar += (x[i] - xMean) * (y[i] - yMean);
+            }
+
+            // Calculate Pearson correlation
+            const correlation = xyVar / (Math.sqrt(xxVar) * Math.sqrt(yyVar));
+            return correlation;
+        }
+
+        // Function to update sentiment chart
+        function updateSentimentChart() {
+            // Clear existing chart if it exists
+            if (sentimentChart) {
+                sentimentChart.destroy();
+            }
+
+            // Get canvas context
+            const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+
+            // Calculate new correlation
+            const correlation = calculateCorrelation(sentimentData);
+
+            // Update correlation display
+            const correlationBadge = document.querySelector('.correlation-stats .badge.bg-primary');
+            if (correlationBadge) {
+                const newCorrelation = calculateCorrelation(sentimentData);
+                console.log(`New correlation: ${newCorrelation.toFixed(2)}`);
+                correlationBadge.textContent = `Correlation: ${newCorrelation.toFixed(2)}`;
+            }
+
+            // Update article count display
+            const countBadge = document.querySelector('.correlation-stats .badge.bg-info');
+            if (countBadge) {
+                console.log(`Updating count badge to ${sentimentData.length} articles`);
+                countBadge.textContent = `${sentimentData.length} articles analyzed`;
+            }
+
+            // Create the scatter chart
+            sentimentChart = new Chart(sentimentCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Very Positive Headlines',
+                            data: sentimentData.filter(a => a.sentiment_score >= 0.7).map(a => ({
+                                x: a.sentiment_score,
+                                y: a.comment_count,
+                                title: a.title
+                            })),
+                            backgroundColor: 'rgba(40, 167, 69, 0.6)',
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Positive Headlines',
+                            data: sentimentData.filter(a => a.sentiment_score >= 0.3 && a.sentiment_score < 0.7).map(a => ({
+                                x: a.sentiment_score,
+                                y: a.comment_count,
+                                title: a.title
+                            })),
+                            backgroundColor: 'rgba(92, 184, 92, 0.6)',
+                            borderColor: 'rgba(92, 184, 92, 1)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Slightly Positive Headlines',
+                            data: sentimentData.filter(a => a.sentiment_score >= 0.1 && a.sentiment_score < 0.3).map(a => ({
+                                x: a.sentiment_score,
+                                y: a.comment_count,
+                                title: a.title
+                            })),
+                            backgroundColor: 'rgba(139, 195, 74, 0.6)',
+                            borderColor: 'rgba(139, 195, 74, 1)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Neutral Headlines',
+                            data: sentimentData.filter(a => a.sentiment_score > -0.1 && a.sentiment_score < 0.1).map(a => ({
+                                x: a.sentiment_score,
+                                y: a.comment_count,
+                                title: a.title
+                            })),
+                            backgroundColor: 'rgba(108, 117, 125, 0.6)',
+                            borderColor: 'rgba(108, 117, 125, 1)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Slightly Negative Headlines',
+                            data: sentimentData.filter(a => a.sentiment_score <= -0.1 && a.sentiment_score > -0.3).map(a => ({
+                                x: a.sentiment_score,
+                                y: a.comment_count,
+                                title: a.title
+                            })),
+                            backgroundColor: 'rgba(240, 128, 128, 0.6)',
+                            borderColor: 'rgba(240, 128, 128, 1)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Negative Headlines',
+                            data: sentimentData.filter(a => a.sentiment_score <= -0.3 && a.sentiment_score > -0.7).map(a => ({
+                                x: a.sentiment_score,
+                                y: a.comment_count,
+                                title: a.title
+                            })),
+                            backgroundColor: 'rgba(231, 76, 60, 0.6)',
+                            borderColor: 'rgba(231, 76, 60, 1)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Very Negative Headlines',
+                            data: sentimentData.filter(a => a.sentiment_score <= -0.7).map(a => ({
+                                x: a.sentiment_score,
+                                y: a.comment_count,
+                                title: a.title
+                            })),
+                            backgroundColor: 'rgba(220, 53, 69, 0.6)',
+                            borderColor: 'rgba(220, 53, 69, 1)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1.5,             // Set a fixed aspect ratio (width/height)
+                    plugins: {
+                        legend: {
+                            display: false  // This hides the legend of datasets
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const point = context.raw;
+                                    return [
+                                        `Title: ${point.title}`,
+                                        `Sentiment Score: ${point.x.toFixed(2)}`,
+                                        `Comments: ${point.y}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Sentiment Score'
+                            },
+                            min: -1.1,
+                            max: 1.1,
+                            ticks: {
+                                callback: function (value) {
+                                    if (value === -1) return 'Very Negative';
+                                    if (value === -0.5) return 'Negative';
+                                    if (value === 0) return 'Neutral';
+                                    if (value === 0.5) return 'Positive';
+                                    if (value === 1) return 'Very Positive';
+                                    return '';
+                                }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Comment Count'
+                            },
+                            min: 0,
+                            // Calculate a reasonable maximum based on data
+                            suggestedMax: function () {
+                                // Get all comment counts
+                                const allCounts = sentimentData.map(a => a.comment_count).sort((a, b) => a - b);
+                                if (allCounts.length === 0) return 500;
+
+                                // Find the 95th percentile value to exclude extreme outliers
+                                const idx = Math.floor(allCounts.length * 0.95);
+                                const percentile95 = allCounts[idx];
+
+                                // Add 10% padding to the max value
+                                return Math.ceil(percentile95 * 1.1);
+                            }()
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize sentiment chart on page load
+        updateSentimentChart();
+
+        // Configure trends chart (your existing chart)
+        const ctx = document.getElementById('trendsChart').getContext('2d');
+
+        const chartLabels = {{ chart_labels| tojson }};
+        const avgCommentsData = {{ avg_comments_data| tojson }};
+        const articleCountData = {{ article_count_data| tojson }};
+
+        let trendsChart = new Chart(ctx, {
+            // Your existing chart configuration here
+            // ...
+        });
     });
-
-    // Configure trends chart (your existing chart)
-    const ctx = document.getElementById('trendsChart').getContext('2d');
-
-    const chartLabels = {{ chart_labels| tojson }};
-    const avgCommentsData = {{ avg_comments_data| tojson }};
-    const articleCountData = {{ article_count_data| tojson }};
-
-    let trendsChart = new Chart(ctx, {
-        // Your existing chart configuration here
-        // ...
-    });
-  });
 </script>
 {% endblock %}

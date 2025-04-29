@@ -30,7 +30,7 @@ def index():
     last_scraped = request.args.get('last_scraped', None)
     
     # Get recent articles with the selected sorting
-    articles = Article.get_all(limit=50, order_by=order_by, ascending=ascending)
+    articles = Article.get_all(limit=1200, order_by=order_by, ascending=ascending)
     
     # Get sentiment service to categorize sentiments for display
     try:

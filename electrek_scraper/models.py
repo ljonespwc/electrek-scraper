@@ -63,8 +63,10 @@ class Article:
                 .gte("published_at", start_date) \
                 .not_.is_("sentiment_score", "null") \
                 .execute()
-                
+            
+            # Just return the raw data - no need for processing
             return response.data
+                
         except Exception as e:
             print(f"Error getting sentiment data: {str(e)}")
             return []

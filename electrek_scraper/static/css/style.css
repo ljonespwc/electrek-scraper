@@ -152,3 +152,12 @@ body {
     font-size: 0.85em;
     margin-left: 0.35em;
 }
+
+/* Tesla filter button */
+#toggleTeslaBtn {
+    transition: all 0.2s ease;
+}
+
+#toggleTeslaBtn:hover {
+    background-color: rgba(var(--primary), 0.1);
+}
