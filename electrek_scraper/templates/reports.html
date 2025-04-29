@@ -82,7 +82,7 @@
         <canvas id="trendsChart"></canvas>
     </div>
 
-    <div class="chart-container mt-4" id="correlation-chart-container" style="display: none;">
+    <div class="chart-container mt-4" id="correlation-chart-container" style="display: none; height: 1000px;">
         <h2>Title Sentiment vs Comment Count</h2>
         <p>Exploring correlation between headline sentiment and reader engagement</p>
 
@@ -95,6 +95,32 @@
 
         <canvas id="sentimentChart"></canvas>
     </div>
+
+    <div class="chart-container mt-4" id="top-articles-chart-container" style="display: none;">
+        <h2>Top Articles</h2>
+        <p>Articles with the most comments</p>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Comments</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in top_articles %}
+                <tr>
+                    <td>{{ article.title }}</td>
+                    <td>{{ article.comment_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="chart-container mt-4" id="keyword-analysis-chart-container" style="display: none;">
+        <h2>Keyword Analysis</h2>
+        <p>Analyze keyword trends in article headlines</p>
+        <!-- Add your keyword analysis chart here -->
 </div>
 {% endblock %}
 
@@ -251,8 +277,12 @@
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
+            aspectRatio: 1.5,             // Set a fixed aspect ratio (width/height)
             plugins: {
+                legend: {
+                    display: false  // This hides the legend of datasets
+                },
                 tooltip: {
                     callbacks: {
                         label: function (context) {
@@ -264,9 +294,6 @@
                             ];
                         }
                     }
-                },
-                legend: {
-                    position: 'bottom',
                 }
             },
             scales: {
@@ -275,8 +302,8 @@
                         display: true,
                         text: 'Sentiment Score'
                     },
-                    min: -1,
-                    max: 1,
+                    min: -1.1,
+                    max: 1.1,
                     ticks: {
                         callback: function (value) {
                             if (value === -1) return 'Very Negative';
@@ -293,7 +320,20 @@
                         display: true,
                         text: 'Comment Count'
                     },
-                    min: 0
+                    min: 0,
+                    // Calculate a reasonable maximum based on data
+                    suggestedMax: function () {
+                        // Get all comment counts
+                        const allCounts = sentimentData.map(a => a.comment_count).sort((a, b) => a - b);
+                        if (allCounts.length === 0) return 500;
+
+                        // Find the 95th percentile value to exclude extreme outliers
+                        const idx = Math.floor(allCounts.length * 0.95);
+                        const percentile95 = allCounts[idx];
+
+                        // Add 10% padding to the max value
+                        return Math.ceil(percentile95 * 1.1);
+                    }()
                 }
             }
         }
