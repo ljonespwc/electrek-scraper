@@ -188,6 +188,33 @@
                     t.classList.remove('active');
                 }
             });
+        } else {
+            // Set the first tab as active if no tab is specified
+            const firstTab = tabs[0];
+            if (firstTab) {
+                firstTab.classList.add('active');
+                const firstTabName = firstTab.dataset.tab;
+                if (chartContainers[firstTabName]) {
+                    chartContainers[firstTabName].style.display = 'block';
+                }
+            }
+        }
+
+        // Function to update date filter links with current active tab
+        function updateDateFilterLinks() {
+            // Find which tab is currently active
+            const activeTab = document.querySelector('.tab.active');
+            if (!activeTab) return;
+
+            const activeTabName = activeTab.dataset.tab;
+            console.log("Updating date links with active tab: " + activeTabName);
+
+            // Update all date filter links
+            document.querySelectorAll('.date-btn').forEach(link => {
+                const url = new URL(link.href);
+                url.searchParams.set('active_tab', activeTabName);
+                link.href = url.toString();
+            });
         }
 
         // Add click handlers to tabs
@@ -205,7 +232,7 @@
 
                 // Show the selected container
                 const tabName = tab.dataset.tab;
-                console.log("Tab clicked: " + tabName); 
+                console.log("Tab clicked: " + tabName);
                 if (chartContainers[tabName]) {
                     chartContainers[tabName].style.display = 'block';
                 }
@@ -214,8 +241,14 @@
                 const newUrl = new URL(window.location);
                 newUrl.searchParams.set('active_tab', tabName);
                 history.replaceState({}, '', newUrl);
+
+                // Update date filter links with the new active tab
+                updateDateFilterLinks();
             });
         });
+
+        // Update date links on initial page load
+        updateDateFilterLinks();
 
         // Set up global filter state
         let currentFilter = 'all'; // Can be 'all', 'tesla', or 'no-tesla'
