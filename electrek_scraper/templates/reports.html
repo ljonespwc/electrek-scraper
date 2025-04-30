@@ -91,16 +91,16 @@
         <h3>Date Range</h3>
         <p>Select time period to analyze</p>
         <div class="date-buttons">
-            <a href="{{ url_for('main.reports', months=1) }}" class="date-btn {% if months == 1 %}active{% endif %}">1
-                Month</a>
-            <a href="{{ url_for('main.reports', months=3) }}" class="date-btn {% if months == 3 %}active{% endif %}">3
-                Months</a>
-            <a href="{{ url_for('main.reports', months=6) }}" class="date-btn {% if months == 6 %}active{% endif %}">6
-                Months</a>
-            <a href="{{ url_for('main.reports', months=12) }}" class="date-btn {% if months == 12 %}active{% endif %}">1
-                Year</a>
-            <a href="{{ url_for('main.reports', months=24) }}" class="date-btn {% if months == 24 %}active{% endif %}">2
-                Years</a>
+            <a href="{{ url_for('main.reports', months=1, active_tab=request.args.get('active_tab')) }}"
+                class="date-btn {% if months == 1 %}active{% endif %}">1 Month</a>
+            <a href="{{ url_for('main.reports', months=3, active_tab=request.args.get('active_tab')) }}"
+                class="date-btn {% if months == 3 %}active{% endif %}">3 Months</a>
+            <a href="{{ url_for('main.reports', months=6, active_tab=request.args.get('active_tab')) }}"
+                class="date-btn {% if months == 6 %}active{% endif %}">6 Months</a>
+            <a href="{{ url_for('main.reports', months=12, active_tab=request.args.get('active_tab')) }}"
+                class="date-btn {% if months == 12 %}active{% endif %}">1 Year</a>
+            <a href="{{ url_for('main.reports', months=24, active_tab=request.args.get('active_tab')) }}"
+                class="date-btn {% if months == 24 %}active{% endif %}">2 Years</a>
         </div>
     </div>
 
@@ -158,7 +158,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Tab switching functionality (unchanged)
+        // Tab switching functionality
         const tabs = document.querySelectorAll('.tab');
         const chartContainers = {
             'comment-trends': document.getElementById('chart-container'),
@@ -166,6 +166,31 @@
             // Add other chart containers as needed
         };
 
+        // Check URL for active tab parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTabFromURL = urlParams.get('active_tab');
+
+        // Initialize the tabs
+        if (activeTabFromURL && chartContainers[activeTabFromURL]) {
+            // Hide all containers first
+            Object.values(chartContainers).forEach(container => {
+                if (container) container.style.display = 'none';
+            });
+
+            // Show the container from URL
+            chartContainers[activeTabFromURL].style.display = 'block';
+
+            // Update tab active state
+            tabs.forEach(t => {
+                if (t.dataset.tab === activeTabFromURL) {
+                    t.classList.add('active');
+                } else {
+                    t.classList.remove('active');
+                }
+            });
+        }
+
+        // Add click handlers to tabs
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 // Remove active class from all tabs
@@ -180,9 +205,15 @@
 
                 // Show the selected container
                 const tabName = tab.dataset.tab;
+                console.log("Tab clicked: " + tabName); 
                 if (chartContainers[tabName]) {
                     chartContainers[tabName].style.display = 'block';
                 }
+
+                // Update URL without reloading page
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('active_tab', tabName);
+                history.replaceState({}, '', newUrl);
             });
         });
 
