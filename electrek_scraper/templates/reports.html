@@ -207,7 +207,6 @@
             if (!activeTab) return;
 
             const activeTabName = activeTab.dataset.tab;
-            console.log("Updating date links with active tab: " + activeTabName);
 
             // Update all date filter links
             document.querySelectorAll('.date-btn').forEach(link => {
@@ -232,7 +231,6 @@
 
                 // Show the selected container
                 const tabName = tab.dataset.tab;
-                console.log("Tab clicked: " + tabName);
                 if (chartContainers[tabName]) {
                     chartContainers[tabName].style.display = 'block';
                 }
@@ -254,7 +252,7 @@
         let currentFilter = 'all'; // Can be 'all', 'tesla', or 'no-tesla'
 
         // Get all sentiment data from the template
-        const allSentimentData = {{ sentiment_data| tojson
+        const allSentimentData = {{ sentiment_data|tojson
     }};
 
     // Detect Tesla/Elon articles
@@ -269,8 +267,6 @@
     // Count Tesla/Elon articles
     const teslaElonArticles = allSentimentData.filter(article => article.is_tesla_elon);
     const nonTeslaElonArticles = allSentimentData.filter(article => !article.is_tesla_elon);
-
-    console.log(`Found ${teslaElonArticles.length} Tesla/Elon/Musk articles out of ${allSentimentData.length} total`);
 
     // Global filtered data
     let filteredData = allSentimentData;
@@ -294,7 +290,6 @@
         if (this.checked) {
             currentFilter = 'all';
             filteredData = allSentimentData;
-            console.log(`Global filter: Showing all ${filteredData.length} articles`);
             updateAllVisualizations();
         }
     });
@@ -303,7 +298,6 @@
         if (this.checked) {
             currentFilter = 'tesla';
             filteredData = teslaElonArticles;
-            console.log(`Global filter: Showing only ${filteredData.length} Tesla/Elon articles`);
             updateAllVisualizations();
         }
     });
@@ -312,7 +306,6 @@
         if (this.checked) {
             currentFilter = 'no-tesla';
             filteredData = nonTeslaElonArticles;
-            console.log(`Global filter: Showing ${filteredData.length} non-Tesla/Elon articles`);
             updateAllVisualizations();
         }
     });
@@ -359,8 +352,6 @@
             const maxCommentsValue = statsCards[3].querySelector('.stat-value');
             if (maxCommentsValue) maxCommentsValue.textContent = maxComments.toLocaleString();
         }
-
-        console.log(`Statistics updated: ${totalArticles} articles, ${totalComments} comments, ${avgComments} avg, ${maxComments} max`);
     }
 
     // Function to calculate correlation coefficient
@@ -586,10 +577,10 @@
 
         // For now, we'll use the original data from the template
         // In a more complete implementation, you would filter this data too
-        const chartLabels = {{ chart_labels| tojson
+        const chartLabels = {{ chart_labels|tojson
     }};
-    const avgCommentsData = {{ avg_comments_data| tojson }};
-    const articleCountData = {{ article_count_data| tojson }};
+    const avgCommentsData = {{ avg_comments_data|tojson }};
+    const articleCountData = {{ article_count_data|tojson }};
 
     // Create the chart
     trendsChart = new Chart(ctx.getContext('2d'), {
