@@ -183,13 +183,16 @@ def api_articles():
 @bp.route('/reports')
 def reports():
     """Show reporting dashboard with analytics"""
-    # Get the date range parameter, default to 6 months for trends
+    # Get the date range parameter, default to 6 months
     months = request.args.get('months', 6, type=int)
     
-    # Get statistics
-    stats = Article.get_statistics()
+    # Get all sentiment data for filtering in javascript - date filtering happens in the backend
+    all_sentiment_data = Article.get_sentiment_data(months)
     
-    # Get monthly data for the chart (using the specified months)
+    # Get statistics for the selected time period
+    filtered_stats = Article.get_statistics(months)
+    
+    # Get monthly data for the trends chart
     monthly_data = Article.get_monthly_stats(months)
     
     # Format the data for the chart
@@ -209,16 +212,13 @@ def reports():
         avg_comments_data.append(item['avg_comments'])
         article_count_data.append(item['article_count'])
     
-    # Get ALL sentiment correlation data (pass None for months to get all)
-    sentiment_data = Article.get_sentiment_data(None)  # Changed to None to get all articles
-    
     # Get sentiment service to categorize sentiments
     from .utils.sentiment_service import SentimentService
     sentiment_service = SentimentService()
     
     # Process sentiment data for the chart
     scatter_data = []
-    for article in sentiment_data:
+    for article in all_sentiment_data:
         if article.get('sentiment_score') is not None and article.get('comment_count') is not None:
             # Add the article to the scatter data
             sentiment_category = sentiment_service.get_sentiment_category(article.get('sentiment_score'))
@@ -227,6 +227,7 @@ def reports():
                 'title': article.get('title', 'Untitled'),
                 'sentiment_score': article.get('sentiment_score'),
                 'comment_count': article.get('comment_count'),
+                'published_at': article.get('published_at'),
                 'sentiment_category': sentiment_category
             })
     
@@ -242,16 +243,17 @@ def reports():
             print(f"Error calculating correlation: {str(e)}")
     
     # Add count of analyzed articles to logs
-    print(f"Sentiment analysis using {len(scatter_data)} articles")
+    print(f"Sentiment analysis using {len(scatter_data)} articles for {months} month period")
     
     return render_template('reports.html', 
-                          stats=stats,
+                          stats=filtered_stats,
                           chart_labels=chart_labels,
                           avg_comments_data=avg_comments_data,
                           article_count_data=article_count_data,
                           months=months,
                           sentiment_data=scatter_data,
                           correlation=correlation)
+
 @bp.route('/analyze_sentiments', methods=['POST'])
 def analyze_sentiments():
     """Trigger sentiment analysis for all articles with enhanced debugging"""

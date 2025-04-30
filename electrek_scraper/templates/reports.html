@@ -91,6 +91,8 @@
         <h3>Date Range</h3>
         <p>Select time period to analyze</p>
         <div class="date-buttons">
+            <a href="{{ url_for('main.reports', months=1) }}" class="date-btn {% if months == 1 %}active{% endif %}">1
+                Month</a>
             <a href="{{ url_for('main.reports', months=3) }}" class="date-btn {% if months == 3 %}active{% endif %}">3
                 Months</a>
             <a href="{{ url_for('main.reports', months=6) }}" class="date-btn {% if months == 6 %}active{% endif %}">6

@@ -105,20 +105,23 @@ class Article:
             page_size = 1000
             current_page = 0
             
+            # Build base query
+            base_query = supabase.table("articles") \
+                .select("id, title, sentiment_score, comment_count, published_at") \
+                .not_.is_("sentiment_score", "null")
+            
+            # Apply date filter if months is specified
+            if months is not None:
+                from datetime import datetime, timedelta
+                start_date = (datetime.now() - timedelta(days=30 * months)).isoformat()
+                base_query = base_query.gte("published_at", start_date)
+                period_msg = f"for the last {months} months"
+            else:
+                period_msg = "for all time"
+            
             while True:
-                # Build query for articles with sentiment scores
-                query = supabase.table("articles") \
-                    .select("id, title, sentiment_score, comment_count, published_at") \
-                    .not_.is_("sentiment_score", "null")
-                
-                # Apply date filter only if months is specified
-                if months is not None:
-                    from datetime import datetime, timedelta
-                    start_date = (datetime.now() - timedelta(days=30 * months)).isoformat()
-                    query = query.gte("published_at", start_date)
-                
                 # Add pagination
-                query = query.range(current_page * page_size, (current_page + 1) * page_size - 1)
+                query = base_query.range(current_page * page_size, (current_page + 1) * page_size - 1)
                 
                 # Execute query
                 response = query.execute()
@@ -140,7 +143,7 @@ class Article:
                 # Move to next page
                 current_page += 1
             
-            print(f"Retrieved {len(all_data)} articles with sentiment scores using pagination")
+            print(f"Retrieved {len(all_data)} articles with sentiment scores {period_msg}")
             
             return all_data
                 
@@ -216,8 +219,8 @@ class Article:
         return len(response.data) > 0
 
     @staticmethod
-    def get_statistics():
-        """Get various statistics about the articles with additional logging"""
+    def get_statistics(months=None):
+        """Get various statistics about the articles with date filtering support"""
         
         # Initialize default values
         total_articles = 0
@@ -227,8 +230,27 @@ class Article:
         most_commented_article = None
         
         try:
-            # Get total number of articles
-            articles_response = supabase.table("articles").select("count").execute()
+            # Define start date if months is specified
+            start_date = None
+            if months is not None:
+                from datetime import datetime, timedelta
+                start_date = (datetime.now() - timedelta(days=30 * months)).isoformat()
+                period_msg = f"for the last {months} months"
+            else:
+                period_msg = "for all time"
+            
+            # Get total articles count
+            if start_date:
+                # With date filter
+                articles_response = supabase.table("articles") \
+                    .select("count") \
+                    .gte("published_at", start_date) \
+                    .execute()
+            else:
+                # Without date filter
+                articles_response = supabase.table("articles") \
+                    .select("count") \
+                    .execute()
             
             if hasattr(articles_response, 'count') and articles_response.count is not None:
                 total_articles = articles_response.count
@@ -237,7 +259,16 @@ class Article:
                     total_articles = articles_response.data[0]['count']
             
             if not total_articles:  # Still no count, get all IDs
-                id_response = supabase.table("articles").select("id").execute()
+                if start_date:
+                    id_response = supabase.table("articles") \
+                        .select("id") \
+                        .gte("published_at", start_date) \
+                        .execute()
+                else:
+                    id_response = supabase.table("articles") \
+                        .select("id") \
+                        .execute()
+                    
                 if id_response.data:
                     total_articles = len(id_response.data)
                     
@@ -247,10 +278,18 @@ class Article:
             current_page = 0
             
             while True:
-                comment_response = supabase.table("articles") \
-                    .select("id, title, comment_count") \
-                    .range(current_page * page_size, (current_page + 1) * page_size - 1) \
-                    .execute()
+                # Build page query with date filter if needed
+                if start_date:
+                    comment_response = supabase.table("articles") \
+                        .select("id, title, comment_count, published_at") \
+                        .gte("published_at", start_date) \
+                        .range(current_page * page_size, (current_page + 1) * page_size - 1) \
+                        .execute()
+                else:
+                    comment_response = supabase.table("articles") \
+                        .select("id, title, comment_count, published_at") \
+                        .range(current_page * page_size, (current_page + 1) * page_size - 1) \
+                        .execute()
                     
                 page_data = comment_response.data
                 
@@ -264,10 +303,15 @@ class Article:
                     
                 current_page += 1
             
+            print(f"Retrieved {len(all_articles_with_comments)} articles with comments {period_msg}")
+            
             # Debug - check highest comment values
             sorted_by_comments = sorted(all_articles_with_comments, 
                                     key=lambda x: x.get('comment_count', 0) if x.get('comment_count') is not None else 0,
                                     reverse=True)
+            
+            if len(sorted_by_comments) > 0:
+                print(f"Highest comment article: {sorted_by_comments[0].get('title', 'No title')} - {sorted_by_comments[0].get('comment_count')} comments")
             
             # For total comments, use a direct sum of all non-null values
             comment_counts = []
@@ -291,8 +335,8 @@ class Article:
             # Get article with the highest comment count
             if max_comments > 0:
                 most_commented_article = next((a for a in all_articles_with_comments if a.get('comment_count') == max_comments), None)
-                
-            print(f"Stats calculation: {total_articles} articles, {total_comments} total comments, {avg_comments} avg, {max_comments} max")
+            
+            print(f"Stats calculation {period_msg}: {total_articles} articles, {total_comments} total comments, {avg_comments} avg, {max_comments} max")
             
         except Exception as e:
             print(f"Error calculating statistics: {str(e)}")
