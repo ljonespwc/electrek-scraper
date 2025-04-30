@@ -217,7 +217,7 @@ class Article:
 
     @staticmethod
     def get_statistics():
-        """Get various statistics about the articles with robust None handling"""
+        """Get various statistics about the articles with additional logging"""
         
         # Initialize default values
         total_articles = 0
@@ -227,69 +227,77 @@ class Article:
         most_commented_article = None
         
         try:
-            # Get total number of articles - with explicit fallback
+            # Get total number of articles
             articles_response = supabase.table("articles").select("count").execute()
             
-            # Try multiple methods to get count
             if hasattr(articles_response, 'count') and articles_response.count is not None:
                 total_articles = articles_response.count
-            else:
-                # Fallback: check the count in the data field
-                if articles_response.data and isinstance(articles_response.data, list) and len(articles_response.data) > 0:
-                    if isinstance(articles_response.data[0], dict) and 'count' in articles_response.data[0]:
-                        total_articles = articles_response.data[0]['count']
+            elif articles_response.data and len(articles_response.data) > 0:
+                if isinstance(articles_response.data[0], dict) and 'count' in articles_response.data[0]:
+                    total_articles = articles_response.data[0]['count']
             
-            # If we still don't have a count, get all IDs and count them
-            if not total_articles:
+            if not total_articles:  # Still no count, get all IDs
                 id_response = supabase.table("articles").select("id").execute()
                 if id_response.data:
                     total_articles = len(id_response.data)
                     
-            print(f"Total articles: {total_articles}")
+            # Get ALL articles with comment counts - use pagination to get all
+            all_articles_with_comments = []
+            page_size = 1000
+            current_page = 0
             
-            # Ensure total_articles is an integer
-            total_articles = int(total_articles) if total_articles is not None else 0
+            while True:
+                comment_response = supabase.table("articles") \
+                    .select("id, title, comment_count") \
+                    .range(current_page * page_size, (current_page + 1) * page_size - 1) \
+                    .execute()
+                    
+                page_data = comment_response.data
+                
+                if not page_data:
+                    break
+                    
+                all_articles_with_comments.extend(page_data)
+                
+                if len(page_data) < page_size:
+                    break
+                    
+                current_page += 1
             
-            # Only proceed with calculations if we have articles
-            if total_articles > 0:
-                # Fetch all comment counts for calculations
-                comment_response = supabase.table("articles").select("comment_count").execute()
+            # Debug - check highest comment values
+            sorted_by_comments = sorted(all_articles_with_comments, 
+                                    key=lambda x: x.get('comment_count', 0) if x.get('comment_count') is not None else 0,
+                                    reverse=True)
+            
+            # For total comments, use a direct sum of all non-null values
+            comment_counts = []
+            for article in all_articles_with_comments:
+                count = article.get('comment_count')
+                if count is not None:
+                    try:
+                        count_value = int(count)
+                        comment_counts.append(count_value)
+                        # Track max comments
+                        if count_value > max_comments:
+                            max_comments = count_value
+                    except (ValueError, TypeError):
+                        pass
+            
+            # Calculate total and average
+            if comment_counts:
+                total_comments = sum(comment_counts)
+                avg_comments = round(total_comments / len(comment_counts))
+            
+            # Get article with the highest comment count
+            if max_comments > 0:
+                most_commented_article = next((a for a in all_articles_with_comments if a.get('comment_count') == max_comments), None)
                 
-                # Filter out None values and convert to int
-                comment_counts = []
-                for article in comment_response.data:
-                    count = article.get('comment_count')
-                    if count is not None:
-                        try:
-                            comment_counts.append(int(count))
-                        except (ValueError, TypeError):
-                            # Skip invalid values
-                            pass
-                
-                # Only calculate if we have valid comment counts
-                if comment_counts:
-                    # Calculate total comments
-                    total_comments = sum(comment_counts)
-                    
-                    # Calculate average comments
-                    avg_comments = round(total_comments / len(comment_counts))
-                    
-                    # Find maximum comments
-                    max_comments = max(comment_counts)
-                    
-                    # Get article with most comments
-                    if max_comments > 0:
-                        max_article_response = supabase.table("articles") \
-                            .select("title, url, comment_count") \
-                            .eq("comment_count", max_comments) \
-                            .limit(1) \
-                            .execute()
-                        
-                        most_commented_article = max_article_response.data[0] if max_article_response.data else None
-        
+            print(f"Stats calculation: {total_articles} articles, {total_comments} total comments, {avg_comments} avg, {max_comments} max")
+            
         except Exception as e:
-            # Log the error but continue with default values
             print(f"Error calculating statistics: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
         
         return {
             "total_articles": total_articles,
