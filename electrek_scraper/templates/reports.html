@@ -33,6 +33,11 @@
                         <i class="fas fa-filter me-1"></i> Only Tesla/Elon
                     </label>
 
+                    <input type="radio" class="btn-check" name="globalFilter" id="globalShowOnlyBydBtn">
+                    <label class="btn btn-outline-primary" for="globalShowOnlyBydBtn">
+                        <i class="fas fa-filter me-1"></i> Only BYD
+                    </label>
+
                     <input type="radio" class="btn-check" name="globalFilter" id="globalShowNoTeslaBtn">
                     <label class="btn btn-outline-primary" for="globalShowNoTeslaBtn">
                         <i class="fas fa-ban me-1"></i> No Tesla/Elon
@@ -278,6 +283,7 @@
     // Set up global filter buttons
     const globalShowAllBtn = document.getElementById('globalShowAllBtn');
     const globalShowOnlyTeslaBtn = document.getElementById('globalShowOnlyTeslaBtn');
+    const globalShowOnlyBydBtn = document.getElementById('globalShowOnlyBydBtn');
     const globalShowNoTeslaBtn = document.getElementById('globalShowNoTeslaBtn');
 
     // Hide filter controls if no Tesla/Elon articles
@@ -298,6 +304,14 @@
         if (this.checked) {
             currentFilter = 'tesla';
             filteredData = teslaElonArticles;
+            updateAllVisualizations();
+        }
+    });
+
+    globalShowOnlyBydBtn.addEventListener('change', function () {
+        if (this.checked) {
+            currentFilter = 'byd';
+            filteredData = allSentimentData.filter(article => article.title.toLowerCase().includes('byd'));
             updateAllVisualizations();
         }
     });
