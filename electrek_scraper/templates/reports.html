@@ -602,6 +602,27 @@
         const engagementCtx = document.getElementById('engagementChart').getContext('2d');
         if (!engagementCtx) return;
 
+        // Define sentiment colors (same as pie charts)
+        const sentimentColors = [
+            'rgba(220, 53, 69, 0.7)',   // Very Negative
+            'rgba(231, 76, 60, 0.7)',   // Negative  
+            'rgba(240, 128, 128, 0.7)', // Slightly Negative
+            'rgba(108, 117, 125, 0.7)', // Neutral
+            'rgba(139, 195, 74, 0.7)',  // Slightly Positive
+            'rgba(92, 184, 92, 0.7)',   // Positive
+            'rgba(40, 167, 69, 0.7)'    // Very Positive
+        ];
+
+        const sentimentBorderColors = [
+            'rgba(220, 53, 69, 1)',
+            'rgba(231, 76, 60, 1)',
+            'rgba(240, 128, 128, 1)',
+            'rgba(108, 117, 125, 1)',
+            'rgba(139, 195, 74, 1)',
+            'rgba(92, 184, 92, 1)',
+            'rgba(40, 167, 69, 1)'
+        ];
+
         // Create the bar chart with filtered data
         engagementChart = new Chart(engagementCtx, {
             type: 'bar',
@@ -641,14 +662,13 @@
                                 return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
                             })()
                         ],
-                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                        borderColor: 'rgba(59, 130, 246, 1)',
-                        borderWidth: 1
+                        backgroundColor: sentimentColors,
+                        borderColor: sentimentBorderColors,
+                        borderWidth: 2
                     },
                     {
                         label: 'Non-Tesla Articles',
                         data: [
-                            // Calculate average comments for each sentiment bucket
                             (() => {
                                 const articles = filteredData.filter(a => !a.is_tesla_elon && a.sentiment_score <= -0.7);
                                 return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
@@ -678,9 +698,10 @@
                                 return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
                             })()
                         ],
-                        backgroundColor: 'rgba(107, 114, 128, 0.7)',
-                        borderColor: 'rgba(107, 114, 128, 1)',
-                        borderWidth: 1
+                        backgroundColor: sentimentColors.map(color => color.replace('0.7', '0.4')), // More transparent for pattern effect
+                        borderColor: sentimentBorderColors,
+                        borderWidth: 2,
+                        borderDash: [5, 5] // Dashed border pattern for Non-Tesla
                     }
                 ]
             },
@@ -689,7 +710,8 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: true  // This shows the legend of datasets
+                        display: true,
+                        position: 'top'
                     },
                     tooltip: {
                         callbacks: {
