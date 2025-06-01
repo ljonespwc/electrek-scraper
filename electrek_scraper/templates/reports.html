@@ -88,6 +88,7 @@
     <div class="tabs-container">
         <div class="tab" data-tab="correlation">Correlation</div>
         <div class="tab" data-tab="engagement">Engagement Analysis</div>
+        <div class="tab" data-tab="distribution">Sentiment Distribution</div>
     </div>
 
     <div class="date-range-container">
@@ -137,6 +138,47 @@
             <canvas id="engagementChart"></canvas>
         </div>
     </div>
+
+    <div class="chart-container" id="distribution-chart-container" style="display: none; height: 650px; padding-bottom: 20px;">
+        <h2>Sentiment Distribution Analysis</h2>
+        <p>Percentage of articles by sentiment - revealing editorial bias patterns</p>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="distribution-stats">
+                <span class="badge bg-warning" id="distribution-insight">Analyzing sentiment distribution...</span>
+            </div>
+        </div>
+
+        <div class="row" style="height: 500px;">
+            <div class="col-md-6">
+                <h4 class="text-center mb-3">Tesla/Elon Articles</h4>
+                <div style="height: 450px;">
+                    <canvas id="teslaDistributionChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h4 class="text-center mb-3">Non-Tesla Articles</h4>
+                <div style="height: 450px;">
+                    <canvas id="nonTeslaDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Shared Legend -->
+        <div class="row mt-3">
+            <div class="col-12 text-center">
+                <div class="d-flex justify-content-center flex-wrap gap-3">
+                    <span><span style="display: inline-block; width: 12px; height: 12px; background-color: rgba(220, 53, 69, 0.7); margin-right: 5px;"></span>Very Negative</span>
+                    <span><span style="display: inline-block; width: 12px; height: 12px; background-color: rgba(231, 76, 60, 0.7); margin-right: 5px;"></span>Negative</span>
+                    <span><span style="display: inline-block; width: 12px; height: 12px; background-color: rgba(240, 128, 128, 0.7); margin-right: 5px;"></span>Slightly Negative</span>
+                    <span><span style="display: inline-block; width: 12px; height: 12px; background-color: rgba(108, 117, 125, 0.7); margin-right: 5px;"></span>Neutral</span>
+                    <span><span style="display: inline-block; width: 12px; height: 12px; background-color: rgba(139, 195, 74, 0.7); margin-right: 5px;"></span>Slightly Positive</span>
+                    <span><span style="display: inline-block; width: 12px; height: 12px; background-color: rgba(92, 184, 92, 0.7); margin-right: 5px;"></span>Positive</span>
+                    <span><span style="display: inline-block; width: 12px; height: 12px; background-color: rgba(40, 167, 69, 0.7); margin-right: 5px;"></span>Very Positive</span>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -148,7 +190,8 @@
         const tabs = document.querySelectorAll('.tab');
         const chartContainers = {
             'correlation': document.getElementById('correlation-chart-container'),
-            'engagement': document.getElementById('engagement-chart-container')
+            'engagement': document.getElementById('engagement-chart-container'),
+            'distribution': document.getElementById('distribution-chart-container')
         };
 
         // Set up URL parameters for active tab
@@ -245,6 +288,8 @@
     // Initialize charts
     let sentimentChart = null;
     let engagementChart = null;
+    let teslaDistributionChart = null;
+    let nonTeslaDistributionChart = null;
 
     // Set up global filter buttons
     const globalShowAllBtn = document.getElementById('globalShowAllBtn');
@@ -295,6 +340,7 @@
         updateStatistics();
         updateSentimentChart();
         updateEngagementChart();
+        updateDistributionChart();
     }
 
     // Update statistics at the top
@@ -692,6 +738,164 @@
             } else {
                 engagementInsightBadge.textContent = `${filteredData.filter(a => a.is_tesla_elon).length} Tesla vs ${filteredData.filter(a => !a.is_tesla_elon).length} non-Tesla articles analyzed`;
                 engagementInsightBadge.className = 'badge bg-info';
+            }
+        }
+    }
+
+    // Function to update distribution chart
+    function updateDistributionChart() {
+        // Clear existing charts if they exist
+        if (teslaDistributionChart) {
+            teslaDistributionChart.destroy();
+        }
+        if (nonTeslaDistributionChart) {
+            nonTeslaDistributionChart.destroy();
+        }
+
+        // Get canvas contexts
+        const teslaDistributionCtx = document.getElementById('teslaDistributionChart').getContext('2d');
+        const nonTeslaDistributionCtx = document.getElementById('nonTeslaDistributionChart').getContext('2d');
+        if (!teslaDistributionCtx || !nonTeslaDistributionCtx) return;
+
+        // Calculate Tesla and Non-Tesla article counts for each sentiment bucket
+        const teslaArticles = filteredData.filter(a => a.is_tesla_elon);
+        const nonTeslaArticles = filteredData.filter(a => !a.is_tesla_elon);
+
+        // Create the pie charts with filtered data
+        teslaDistributionChart = new Chart(teslaDistributionCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Very Negative', 'Negative', 'Slightly Negative', 'Neutral', 'Slightly Positive', 'Positive', 'Very Positive'],
+                datasets: [
+                    {
+                        label: 'Tesla/Elon Articles (%)',
+                        data: [
+                            // Calculate percentage of Tesla articles for each sentiment bucket
+                            teslaArticles.length > 0 ? Math.round(teslaArticles.filter(a => a.sentiment_score <= -0.7).length * 100 / teslaArticles.length) : 0,
+                            teslaArticles.length > 0 ? Math.round(teslaArticles.filter(a => a.sentiment_score <= -0.3 && a.sentiment_score > -0.7).length * 100 / teslaArticles.length) : 0,
+                            teslaArticles.length > 0 ? Math.round(teslaArticles.filter(a => a.sentiment_score <= -0.1 && a.sentiment_score > -0.3).length * 100 / teslaArticles.length) : 0,
+                            teslaArticles.length > 0 ? Math.round(teslaArticles.filter(a => a.sentiment_score > -0.1 && a.sentiment_score < 0.1).length * 100 / teslaArticles.length) : 0,
+                            teslaArticles.length > 0 ? Math.round(teslaArticles.filter(a => a.sentiment_score >= 0.1 && a.sentiment_score < 0.3).length * 100 / teslaArticles.length) : 0,
+                            teslaArticles.length > 0 ? Math.round(teslaArticles.filter(a => a.sentiment_score >= 0.3 && a.sentiment_score < 0.7).length * 100 / teslaArticles.length) : 0,
+                            teslaArticles.length > 0 ? Math.round(teslaArticles.filter(a => a.sentiment_score >= 0.7).length * 100 / teslaArticles.length) : 0
+                        ],
+                        backgroundColor: [
+                            'rgba(220, 53, 69, 0.7)',
+                            'rgba(231, 76, 60, 0.7)',
+                            'rgba(240, 128, 128, 0.7)',
+                            'rgba(108, 117, 125, 0.7)',
+                            'rgba(139, 195, 74, 0.7)',
+                            'rgba(92, 184, 92, 0.7)',
+                            'rgba(40, 167, 69, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(220, 53, 69, 1)',
+                            'rgba(231, 76, 60, 1)',
+                            'rgba(240, 128, 128, 1)',
+                            'rgba(108, 117, 125, 1)',
+                            'rgba(139, 195, 74, 1)',
+                            'rgba(92, 184, 92, 1)',
+                            'rgba(40, 167, 69, 1)'
+                        ],
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const value = context.parsed;
+                                return `${value}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        nonTeslaDistributionChart = new Chart(nonTeslaDistributionCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Very Negative', 'Negative', 'Slightly Negative', 'Neutral', 'Slightly Positive', 'Positive', 'Very Positive'],
+                datasets: [
+                    {
+                        label: 'Non-Tesla Articles (%)',
+                        data: [
+                            // Calculate percentage of Non-Tesla articles for each sentiment bucket
+                            nonTeslaArticles.length > 0 ? Math.round(nonTeslaArticles.filter(a => a.sentiment_score <= -0.7).length * 100 / nonTeslaArticles.length) : 0,
+                            nonTeslaArticles.length > 0 ? Math.round(nonTeslaArticles.filter(a => a.sentiment_score <= -0.3 && a.sentiment_score > -0.7).length * 100 / nonTeslaArticles.length) : 0,
+                            nonTeslaArticles.length > 0 ? Math.round(nonTeslaArticles.filter(a => a.sentiment_score <= -0.1 && a.sentiment_score > -0.3).length * 100 / nonTeslaArticles.length) : 0,
+                            nonTeslaArticles.length > 0 ? Math.round(nonTeslaArticles.filter(a => a.sentiment_score > -0.1 && a.sentiment_score < 0.1).length * 100 / nonTeslaArticles.length) : 0,
+                            nonTeslaArticles.length > 0 ? Math.round(nonTeslaArticles.filter(a => a.sentiment_score >= 0.1 && a.sentiment_score < 0.3).length * 100 / nonTeslaArticles.length) : 0,
+                            nonTeslaArticles.length > 0 ? Math.round(nonTeslaArticles.filter(a => a.sentiment_score >= 0.3 && a.sentiment_score < 0.7).length * 100 / nonTeslaArticles.length) : 0,
+                            nonTeslaArticles.length > 0 ? Math.round(nonTeslaArticles.filter(a => a.sentiment_score >= 0.7).length * 100 / nonTeslaArticles.length) : 0
+                        ],
+                        backgroundColor: [
+                            'rgba(220, 53, 69, 0.7)',
+                            'rgba(231, 76, 60, 0.7)',
+                            'rgba(240, 128, 128, 0.7)',
+                            'rgba(108, 117, 125, 0.7)',
+                            'rgba(139, 195, 74, 0.7)',
+                            'rgba(92, 184, 92, 0.7)',
+                            'rgba(40, 167, 69, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(220, 53, 69, 1)',
+                            'rgba(231, 76, 60, 1)',
+                            'rgba(240, 128, 128, 1)',
+                            'rgba(108, 117, 125, 1)',
+                            'rgba(139, 195, 74, 1)',
+                            'rgba(92, 184, 92, 1)',
+                            'rgba(40, 167, 69, 1)'
+                        ],
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const value = context.parsed;
+                                return `${value}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Update distribution insight badge
+        const distributionInsightBadge = document.getElementById('distribution-insight');
+        if (distributionInsightBadge) {
+            // Calculate percentage of negative articles (very negative + negative + slightly negative)
+            const teslaTotal = teslaArticles.length;
+            const nonTeslaTotal = nonTeslaArticles.length;
+            
+            const teslaNegative = teslaArticles.filter(a => a.sentiment_score < -0.1).length;
+            const nonTeslaNegative = nonTeslaArticles.filter(a => a.sentiment_score < -0.1).length;
+            
+            if (teslaTotal > 0 && nonTeslaTotal > 0) {
+                const teslaPercentage = Math.round(teslaNegative * 100 / teslaTotal);
+                const nonTeslaPercentage = Math.round(nonTeslaNegative * 100 / nonTeslaTotal);
+                distributionInsightBadge.textContent = `${teslaPercentage}% of Tesla articles are negative vs ${nonTeslaPercentage}% of non-Tesla articles`;
+                distributionInsightBadge.className = teslaPercentage > nonTeslaPercentage + 20 ? 'badge bg-danger' : 'badge bg-warning';
+            } else {
+                distributionInsightBadge.textContent = `${teslaTotal} Tesla vs ${nonTeslaTotal} non-Tesla articles analyzed`;
+                distributionInsightBadge.className = 'badge bg-info';
             }
         }
     }
