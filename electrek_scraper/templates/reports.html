@@ -86,7 +86,8 @@
     </div>
 
     <div class="tabs-container">
-        <div class="tab active" data-tab="correlation">Correlation</div>
+        <div class="tab" data-tab="correlation">Correlation</div>
+        <div class="tab" data-tab="engagement">Engagement Analysis</div>
     </div>
 
     <div class="date-range-container">
@@ -106,7 +107,7 @@
         </div>
     </div>
 
-    <div class="chart-container" id="correlation-chart-container" style="display: block; height: 1000px;">
+    <div class="chart-container" id="correlation-chart-container" style="display: none; height: 1000px;">
         <h2>Title Sentiment vs Comment Count</h2>
         <p>Exploring correlation between headline sentiment and reader engagement</p>
 
@@ -121,6 +122,21 @@
 
         <canvas id="sentimentChart"></canvas>
     </div>
+
+    <div class="chart-container" id="engagement-chart-container" style="display: none; height: 650px; padding-bottom: 20px;">
+        <h2>Engagement Manipulation Analysis</h2>
+        <p>Comment volume by sentiment - comparing Tesla vs Non-Tesla articles</p>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="engagement-stats">
+                <span class="badge bg-warning" id="engagement-insight">Analyzing engagement patterns...</span>
+            </div>
+        </div>
+
+        <div style="height: 500px;">
+            <canvas id="engagementChart"></canvas>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -128,22 +144,61 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Tab switching functionality (simplified for single tab)
+        // Tab switching functionality
         const tabs = document.querySelectorAll('.tab');
         const chartContainers = {
-            'correlation': document.getElementById('correlation-chart-container')
+            'correlation': document.getElementById('correlation-chart-container'),
+            'engagement': document.getElementById('engagement-chart-container')
         };
 
         // Set up URL parameters for active tab
         const urlParams = new URLSearchParams(window.location.search);
         const activeTabFromUrl = urlParams.get('active_tab') || 'correlation';
 
-        // Set correlation tab as active (it's the only one)
-        const correlationTab = document.querySelector('[data-tab="correlation"]');
-        if (correlationTab) {
-            correlationTab.classList.add('active');
-            chartContainers['correlation'].style.display = 'block';
-        }
+        // Initialize tabs
+        tabs.forEach(tab => {
+            const tabName = tab.dataset.tab;
+            if (tabName === activeTabFromUrl) {
+                tab.classList.add('active');
+                if (chartContainers[tabName]) {
+                    chartContainers[tabName].style.display = 'block';
+                }
+            } else {
+                tab.classList.remove('active');
+                if (chartContainers[tabName]) {
+                    chartContainers[tabName].style.display = 'none';
+                }
+            }
+        });
+
+        // Add click handlers to tabs
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                tab.classList.add('active');
+
+                // Hide all chart containers
+                Object.values(chartContainers).forEach(container => {
+                    if (container) container.style.display = 'none';
+                });
+
+                // Show the selected container
+                const tabName = tab.dataset.tab;
+                if (chartContainers[tabName]) {
+                    chartContainers[tabName].style.display = 'block';
+                }
+
+                // Update URL without reloading page
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('active_tab', tabName);
+                history.replaceState({}, '', newUrl);
+
+                // Update date filter links with the new active tab
+                updateDateFilterLinks();
+            });
+        });
 
         // Function to update date filter links with current active tab
         function updateDateFilterLinks() {
@@ -189,6 +244,7 @@
 
     // Initialize charts
     let sentimentChart = null;
+    let engagementChart = null;
 
     // Set up global filter buttons
     const globalShowAllBtn = document.getElementById('globalShowAllBtn');
@@ -238,6 +294,7 @@
     function updateAllVisualizations() {
         updateStatistics();
         updateSentimentChart();
+        updateEngagementChart();
     }
 
     // Update statistics at the top
@@ -426,8 +483,7 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
-                aspectRatio: 1.5,             // Set a fixed aspect ratio (width/height)
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         display: false  // This hides the legend of datasets
@@ -487,6 +543,157 @@
                 }
             }
         });
+    }
+
+    // Function to update engagement chart
+    function updateEngagementChart() {
+        // Clear existing chart if it exists
+        if (engagementChart) {
+            engagementChart.destroy();
+        }
+
+        // Get canvas context
+        const engagementCtx = document.getElementById('engagementChart').getContext('2d');
+        if (!engagementCtx) return;
+
+        // Create the bar chart with filtered data
+        engagementChart = new Chart(engagementCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Very Negative', 'Negative', 'Slightly Negative', 'Neutral', 'Slightly Positive', 'Positive', 'Very Positive'],
+                datasets: [
+                    {
+                        label: 'Tesla/Elon Articles',
+                        data: [
+                            // Calculate average comments for each sentiment bucket
+                            (() => {
+                                const articles = filteredData.filter(a => a.is_tesla_elon && a.sentiment_score <= -0.7);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })(),
+                            (() => {
+                                const articles = filteredData.filter(a => a.is_tesla_elon && a.sentiment_score <= -0.3 && a.sentiment_score > -0.7);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })(),
+                            (() => {
+                                const articles = filteredData.filter(a => a.is_tesla_elon && a.sentiment_score <= -0.1 && a.sentiment_score > -0.3);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })(),
+                            (() => {
+                                const articles = filteredData.filter(a => a.is_tesla_elon && a.sentiment_score > -0.1 && a.sentiment_score < 0.1);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })(),
+                            (() => {
+                                const articles = filteredData.filter(a => a.is_tesla_elon && a.sentiment_score >= 0.1 && a.sentiment_score < 0.3);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })(),
+                            (() => {
+                                const articles = filteredData.filter(a => a.is_tesla_elon && a.sentiment_score >= 0.3 && a.sentiment_score < 0.7);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })(),
+                            (() => {
+                                const articles = filteredData.filter(a => a.is_tesla_elon && a.sentiment_score >= 0.7);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })()
+                        ],
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Non-Tesla Articles',
+                        data: [
+                            // Calculate average comments for each sentiment bucket
+                            (() => {
+                                const articles = filteredData.filter(a => !a.is_tesla_elon && a.sentiment_score <= -0.7);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })(),
+                            (() => {
+                                const articles = filteredData.filter(a => !a.is_tesla_elon && a.sentiment_score <= -0.3 && a.sentiment_score > -0.7);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })(),
+                            (() => {
+                                const articles = filteredData.filter(a => !a.is_tesla_elon && a.sentiment_score <= -0.1 && a.sentiment_score > -0.3);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })(),
+                            (() => {
+                                const articles = filteredData.filter(a => !a.is_tesla_elon && a.sentiment_score > -0.1 && a.sentiment_score < 0.1);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })(),
+                            (() => {
+                                const articles = filteredData.filter(a => !a.is_tesla_elon && a.sentiment_score >= 0.1 && a.sentiment_score < 0.3);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })(),
+                            (() => {
+                                const articles = filteredData.filter(a => !a.is_tesla_elon && a.sentiment_score >= 0.3 && a.sentiment_score < 0.7);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })(),
+                            (() => {
+                                const articles = filteredData.filter(a => !a.is_tesla_elon && a.sentiment_score >= 0.7);
+                                return articles.length > 0 ? articles.reduce((sum, a) => sum + a.comment_count, 0) / articles.length : 0;
+                            })()
+                        ],
+                        backgroundColor: 'rgba(107, 114, 128, 0.7)',
+                        borderColor: 'rgba(107, 114, 128, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true  // This shows the legend of datasets
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const value = Math.round(context.parsed.y);
+                                const dataset = context.dataset;
+                                return `${dataset.label}: ${value} avg comments`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Sentiment'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Average Comment Volume'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Update engagement insight badge
+        const engagementInsightBadge = document.getElementById('engagement-insight');
+        if (engagementInsightBadge) {
+            // Calculate average comments for negative Tesla vs negative non-Tesla articles
+            const negTeslaArticles = filteredData.filter(a => a.is_tesla_elon && a.sentiment_score < -0.1);
+            const negNonTeslaArticles = filteredData.filter(a => !a.is_tesla_elon && a.sentiment_score < -0.1);
+            
+            const avgNegTeslaComments = negTeslaArticles.length > 0 ? 
+                negTeslaArticles.reduce((sum, a) => sum + a.comment_count, 0) / negTeslaArticles.length : 0;
+            const avgNegNonTeslaComments = negNonTeslaArticles.length > 0 ? 
+                negNonTeslaArticles.reduce((sum, a) => sum + a.comment_count, 0) / negNonTeslaArticles.length : 0;
+            
+            if (avgNegTeslaComments > 0 && avgNegNonTeslaComments > 0) {
+                const multiplier = (avgNegTeslaComments / avgNegNonTeslaComments).toFixed(1);
+                engagementInsightBadge.textContent = `Negative Tesla articles get ${multiplier}x more comments than negative non-Tesla articles`;
+                engagementInsightBadge.className = multiplier > 1.5 ? 'badge bg-danger' : 'badge bg-warning';
+            } else {
+                engagementInsightBadge.textContent = `${filteredData.filter(a => a.is_tesla_elon).length} Tesla vs ${filteredData.filter(a => !a.is_tesla_elon).length} non-Tesla articles analyzed`;
+                engagementInsightBadge.className = 'badge bg-info';
+            }
+        }
     }
 
     // Initialize all visualizations
