@@ -84,7 +84,7 @@
                 <h1 class="display-4">The Business of Hate</h1>
                 <h2 class="h3 mb-3">Anti-Tesla Blog by the Numbers</h2>
                 <p class="lead">A data-driven investigation into how Tesla hate content systematically drives engagement and revenue for Electrek.co</p>
-                <small class="text-light">Analysis based on {{ stats.total_articles|thousands_separator }} articles and {{ stats.total_comments|thousands_separator }} reader comments</small>
+                <small class="text-light">Analysis based on {{ stats.total_articles|thousands_separator }} articles and {{ stats.total_comments|thousands_separator }} reader comments across ALL available data</small>
             </div>
         </div>
     </div>
@@ -362,12 +362,16 @@
                         <strong>{{ business_metrics.sentiment_bias_difference }}%</strong>
                     </div>
                     <div class="d-flex justify-content-between mb-1">
-                        <span>Articles Analyzed:</span>
+                        <span>Total Articles:</span>
                         <strong>{{ stats.total_articles|thousands_separator }}</strong>
                     </div>
                     <div class="d-flex justify-content-between mb-1">
-                        <span>Comments Analyzed:</span>
+                        <span>Total Comments:</span>
                         <strong>{{ stats.total_comments|thousands_separator }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Data Period:</span>
+                        <strong>All Time</strong>
                     </div>
                 </div>
             </div>

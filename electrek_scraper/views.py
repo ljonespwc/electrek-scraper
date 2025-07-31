@@ -301,8 +301,8 @@ def analyze_sentiments():
 @bp.route('/blog/business-of-hate')
 def business_of_hate_blog():
     """Dedicated blog post page for 'The Business of Hate: Anti-Tesla Blog by the Numbers'"""
-    # Use 6 months of data for the blog post analysis
-    months = 6
+    # Use ALL available data for maximum impact
+    months = None  # None = all time data
     
     # Get all the data needed for the blog post
     filtered_stats = Article.get_statistics(months)
