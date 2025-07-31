@@ -196,7 +196,7 @@ def reports():
     monthly_data = Article.get_monthly_stats(months)
     
     # Get additional data for enhanced business analysis
-    top_articles = Article.get_top_articles_analysis(20, months)
+    top_articles = Article.get_top_articles_analysis(25, months)
     author_analysis = Article.get_author_tesla_bias(months)
     company_comparison = Article.get_company_comparison(months)
     business_metrics = Article.get_business_impact_metrics(months)
@@ -307,7 +307,7 @@ def business_of_hate_blog():
     # Get all the data needed for the blog post
     filtered_stats = Article.get_statistics(months)
     all_sentiment_data = Article.get_sentiment_data(months)
-    top_articles = Article.get_top_articles_analysis(20, months)
+    top_articles = Article.get_top_articles_analysis(25, months)
     author_analysis = Article.get_author_tesla_bias(months)
     company_comparison = Article.get_company_comparison(months)
     business_metrics = Article.get_business_impact_metrics(months)

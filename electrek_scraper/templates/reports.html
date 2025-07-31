@@ -1098,7 +1098,8 @@
                             x: author.avg_tesla_sentiment || 0,
                             y: author.tesla_articles || 0,
                             author: author.author,
-                            tesla_percentage: author.tesla_percentage || 0
+                            tesla_percentage: author.tesla_percentage || 0,
+                            total_articles: author.total_articles || 0
                         })),
                         backgroundColor: topAuthors.map(author => 
                             (author.avg_tesla_sentiment || 0) < -0.2 ? 'rgba(220, 53, 69, 0.7)' : 
@@ -1142,8 +1143,9 @@
                                     return [
                                         `Author: ${data.author}`,
                                         `Tesla Articles: ${data.y}`,
-                                        `Avg Tesla Sentiment: ${data.x.toFixed(3)}`,
-                                        `Tesla Coverage: ${data.tesla_percentage}%`
+                                        `Total Articles: ${data.total_articles || 'N/A'}`,
+                                        `Tesla Coverage: ${data.tesla_percentage}%`,
+                                        `Avg Tesla Sentiment: ${data.x.toFixed(3)}`
                                     ];
                                 }
                             }
