@@ -89,6 +89,10 @@
         <div class="tab" data-tab="correlation">Correlation</div>
         <div class="tab" data-tab="engagement">Engagement Analysis</div>
         <div class="tab" data-tab="distribution">Sentiment Distribution</div>
+        <div class="tab" data-tab="business-impact">Business Impact</div>
+        <div class="tab" data-tab="top-articles">Top Articles</div>
+        <div class="tab" data-tab="author-analysis">Author Analysis</div>
+        <div class="tab" data-tab="company-comparison">Company Comparison</div>
     </div>
 
     <div class="date-range-container">
@@ -179,6 +183,147 @@
             </div>
         </div>
     </div>
+
+    <!-- Business Impact Analysis -->
+    <div class="chart-container" id="business-impact-chart-container" style="display: none; height: 800px; padding-bottom: 20px;">
+        <h2>Business Impact Calculator</h2>
+        <p>Quantifying the financial incentive for Tesla hate content</p>
+
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card bg-warning text-dark">
+                    <div class="stat-header">
+                        <span>Tesla Engagement Multiplier</span>
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-value">{{ business_metrics.tesla_engagement_multiplier }}x</div>
+                    <div class="stat-caption">vs non-Tesla articles</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-danger text-white">
+                    <div class="stat-header">
+                        <span>Negative Tesla Multiplier</span>
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="stat-value">{{ business_metrics.negative_tesla_multiplier }}x</div>
+                    <div class="stat-caption">vs negative non-Tesla</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-primary text-white">
+                    <div class="stat-header">
+                        <span>Tesla Traffic Share</span>
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="stat-value">{{ business_metrics.tesla_traffic_percentage }}%</div>
+                    <div class="stat-caption">of total engagement</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-success text-white">
+                    <div class="stat-header">
+                        <span>Sentiment Bias Gap</span>
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <div class="stat-value">{{ business_metrics.sentiment_bias_difference }}%</div>
+                    <div class="stat-caption">more negative Tesla coverage</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h4>The Numbers Don't Lie</h4>
+                <ul class="list-group">
+                    <li class="list-group-item">Tesla articles: <strong>{{ business_metrics.tesla_avg_comments }} avg comments</strong></li>
+                    <li class="list-group-item">Non-Tesla articles: <strong>{{ business_metrics.non_tesla_avg_comments }} avg comments</strong></li>
+                    <li class="list-group-item">Negative Tesla articles: <strong>{{ business_metrics.tesla_negative_avg_comments }} avg comments</strong></li>
+                    <li class="list-group-item">Positive Tesla articles: <strong>{{ business_metrics.tesla_positive_avg_comments }} avg comments</strong></li>
+                    <li class="list-group-item bg-warning">Negative Tesla boost: <strong>{{ business_metrics.tesla_negative_boost_percentage }}% more engagement</strong></li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h4>Business Impact</h4>
+                <div class="alert alert-warning">
+                    <h5>The Tesla Hate Business Model</h5>
+                    <p>Tesla content generates <strong>{{ business_metrics.tesla_engagement_multiplier }}x more engagement</strong> than other topics, driving <strong>{{ business_metrics.tesla_traffic_percentage }}% of total site traffic</strong> despite representing only <strong>{{ business_metrics.tesla_percentage_of_coverage }}%</strong> of articles.</p>
+                    <p class="mb-0"><strong>Bottom line:</strong> Tesla hate content is a systematic business strategy that works.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Articles Analysis -->
+    <div class="chart-container" id="top-articles-chart-container" style="display: none; height: 800px; padding-bottom: 20px;">
+        <h2>Top 20 Most Engaging Articles</h2>
+        <p>The highest-engagement articles reveal the Tesla hate pattern</p>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Rank</th>
+                        <th>Article Title</th>
+                        <th>Author</th>
+                        <th>Comments</th>
+                        <th>Sentiment</th>
+                        <th>Tesla?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for article in top_articles %}
+                    <tr>
+                        <td><span class="badge bg-secondary">{{ loop.index }}</span></td>
+                        <td>
+                            <div class="article-title">
+                                {{ article.title }}
+                                {% if article.is_tesla %}
+                                <span class="badge bg-warning text-dark ms-2">TESLA</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>{{ article.author }}</td>
+                        <td><strong>{{ article.comment_count }}</strong></td>
+                        <td>
+                            <span class="sentiment-badge" style="background-color: {{ article.sentiment_color }}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85em;">
+                                {{ article.sentiment_score|round(2) }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if article.is_tesla %}
+                            <i class="fas fa-check text-success"></i>
+                            {% else %}
+                            <i class="fas fa-times text-muted"></i>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Author Analysis -->
+    <div class="chart-container" id="author-analysis-chart-container" style="display: none; height: 650px; padding-bottom: 20px;">
+        <h2>Author Tesla Bias Analysis</h2>
+        <p>Which authors specialize in Tesla hate content for engagement?</p>
+
+        <div style="height: 500px;">
+            <canvas id="authorAnalysisChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Company Comparison -->
+    <div class="chart-container" id="company-comparison-chart-container" style="display: none; height: 650px; padding-bottom: 20px;">
+        <h2>EV Company Engagement Comparison</h2>
+        <p>Tesla generates disproportionate engagement vs other EV companies</p>
+
+        <div style="height: 500px;">
+            <canvas id="companyComparisonChart"></canvas>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 
@@ -191,7 +336,11 @@
         const chartContainers = {
             'correlation': document.getElementById('correlation-chart-container'),
             'engagement': document.getElementById('engagement-chart-container'),
-            'distribution': document.getElementById('distribution-chart-container')
+            'distribution': document.getElementById('distribution-chart-container'),
+            'business-impact': document.getElementById('business-impact-chart-container'),
+            'top-articles': document.getElementById('top-articles-chart-container'),
+            'author-analysis': document.getElementById('author-analysis-chart-container'),
+            'company-comparison': document.getElementById('company-comparison-chart-container')
         };
 
         // Set up URL parameters for active tab
@@ -921,6 +1070,168 @@
             }
         }
     }
+
+    // Initialize new charts for business impact analysis
+    let authorAnalysisChart = null;
+    let companyComparisonChart = null;
+
+    function createAuthorAnalysisChart() {
+        const authorCtx = document.getElementById('authorAnalysisChart');
+        if (!authorCtx) return;
+
+        const authorData = {{ author_analysis|tojson }};
+        
+        if (authorData && authorData.length > 0) {
+            // Sort by Tesla articles and take top 10
+            const topAuthors = authorData.slice(0, 10);
+            
+            if (authorAnalysisChart) {
+                authorAnalysisChart.destroy();
+            }
+            
+            authorAnalysisChart = new Chart(authorCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Authors (Tesla Articles vs Avg Tesla Sentiment)',
+                        data: topAuthors.map(author => ({
+                            x: author.avg_tesla_sentiment || 0,
+                            y: author.tesla_articles || 0,
+                            author: author.author,
+                            tesla_percentage: author.tesla_percentage || 0
+                        })),
+                        backgroundColor: topAuthors.map(author => 
+                            (author.avg_tesla_sentiment || 0) < -0.2 ? 'rgba(220, 53, 69, 0.7)' : 
+                            (author.avg_tesla_sentiment || 0) > 0.2 ? 'rgba(40, 167, 69, 0.7)' : 
+                            'rgba(108, 117, 125, 0.7)'
+                        ),
+                        borderColor: topAuthors.map(author => 
+                            (author.avg_tesla_sentiment || 0) < -0.2 ? 'rgba(220, 53, 69, 1)' : 
+                            (author.avg_tesla_sentiment || 0) > 0.2 ? 'rgba(40, 167, 69, 1)' : 
+                            'rgba(108, 117, 125, 1)'
+                        ),
+                        pointRadius: 8,
+                        pointHoverRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Average Tesla Sentiment Score'
+                            },
+                            min: -1,
+                            max: 1
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Number of Tesla Articles'
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const data = context.raw;
+                                    return [
+                                        `Author: ${data.author}`,
+                                        `Tesla Articles: ${data.y}`,
+                                        `Avg Tesla Sentiment: ${data.x.toFixed(3)}`,
+                                        `Tesla Coverage: ${data.tesla_percentage}%`
+                                    ];
+                                }
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function createCompanyComparisonChart() {
+        const companyCtx = document.getElementById('companyComparisonChart');
+        if (!companyCtx) return;
+
+        const companyData = {{ company_comparison|tojson }};
+        
+        if (companyData && companyData.length > 0) {
+            if (companyComparisonChart) {
+                companyComparisonChart.destroy();
+            }
+            
+            companyComparisonChart = new Chart(companyCtx, {
+                type: 'bar',
+                data: {
+                    labels: companyData.map(c => c.company),
+                    datasets: [{
+                        label: 'Average Comments per Article',
+                        data: companyData.map(c => c.avg_comments),
+                        backgroundColor: companyData.map(c => 
+                            c.company === 'Tesla/Elon' ? 'rgba(255, 193, 7, 0.8)' : 'rgba(108, 117, 125, 0.6)'
+                        ),
+                        borderColor: companyData.map(c => 
+                            c.company === 'Tesla/Elon' ? 'rgba(255, 193, 7, 1)' : 'rgba(108, 117, 125, 1)'
+                        ),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Average Comments per Article'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'EV Company'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const company = companyData[context.dataIndex];
+                                    return [
+                                        `${company.company}: ${company.avg_comments} avg comments`,
+                                        `Total Articles: ${company.article_count}`,
+                                        `Avg Sentiment: ${company.avg_sentiment.toFixed(3)}`,
+                                        `Negative Articles: ${company.negative_percentage}%`
+                                    ];
+                                }
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // Update the existing updateAllVisualizations function to include new charts
+    const originalUpdateAllVisualizations = updateAllVisualizations;
+    updateAllVisualizations = function() {
+        originalUpdateAllVisualizations();
+        createAuthorAnalysisChart();
+        createCompanyComparisonChart();
+    };
 
     // Initialize all visualizations
     updateAllVisualizations();

@@ -417,3 +417,358 @@ class Article:
             })
         
         return result
+
+    @staticmethod
+    def get_top_articles_analysis(limit=20, months=None):
+        """Get top engaging articles with Tesla classification for business impact analysis"""
+        try:
+            # Build base query for articles with sentiment scores
+            base_query = supabase.table("articles") \
+                .select("id, title, author, comment_count, sentiment_score, published_at") \
+                .not_.is_("sentiment_score", "null") \
+                .order("comment_count", desc=True) \
+                .limit(limit)
+            
+            # Apply date filter if specified
+            if months is not None:
+                from datetime import datetime, timedelta
+                start_date = (datetime.now() - timedelta(days=30 * months)).isoformat()
+                base_query = base_query.gte("published_at", start_date)
+            
+            response = base_query.execute()
+            articles = response.data
+            
+            # Add Tesla classification and sentiment category
+            from .utils.sentiment_service import SentimentService
+            sentiment_service = SentimentService()
+            
+            for article in articles:
+                title_lower = article.get('title', '').lower()
+                # Check for Tesla/Elon mentions
+                article['is_tesla'] = any(keyword in title_lower for keyword in ['tesla', 'elon', 'musk'])
+                # Check for other EV companies
+                article['is_byd'] = 'byd' in title_lower
+                article['is_ford'] = 'ford' in title_lower
+                article['is_rivian'] = 'rivian' in title_lower
+                
+                # Add sentiment category and color
+                if article.get('sentiment_score') is not None:
+                    score = article.get('sentiment_score')
+                    article['sentiment_category'] = sentiment_service.get_sentiment_category(score)
+                    article['sentiment_color'] = sentiment_service.get_sentiment_color(score)
+            
+            print(f"Retrieved top {len(articles)} engaging articles for business analysis")
+            return articles
+            
+        except Exception as e:
+            print(f"Error getting top articles analysis: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+            return []
+
+    @staticmethod
+    def get_author_tesla_bias(months=None):
+        """Analyze author-level Tesla coverage patterns and sentiment bias"""
+        try:
+            # Get all articles with sentiment scores and authors
+            base_query = supabase.table("articles") \
+                .select("author, title, sentiment_score, comment_count, published_at") \
+                .not_.is_("sentiment_score", "null") \
+                .not_.is_("author", "null")
+            
+            # Apply date filter if specified
+            if months is not None:
+                from datetime import datetime, timedelta
+                start_date = (datetime.now() - timedelta(days=30 * months)).isoformat()
+                base_query = base_query.gte("published_at", start_date)
+            
+            # Get all data using pagination
+            all_articles = []
+            page_size = 1000
+            current_page = 0
+            
+            while True:
+                query = base_query.range(current_page * page_size, (current_page + 1) * page_size - 1)
+                response = query.execute()
+                page_data = response.data
+                
+                if not page_data:
+                    break
+                    
+                all_articles.extend(page_data)
+                
+                if len(page_data) < page_size:
+                    break
+                    
+                current_page += 1
+            
+            # Process by author
+            from collections import defaultdict
+            author_stats = defaultdict(lambda: {
+                'total_articles': 0,
+                'tesla_articles': 0,
+                'tesla_sentiment_sum': 0,
+                'tesla_comments_sum': 0,
+                'non_tesla_sentiment_sum': 0,
+                'non_tesla_comments_sum': 0,
+                'non_tesla_articles': 0
+            })
+            
+            for article in all_articles:
+                author = article.get('author', 'Unknown')
+                title_lower = article.get('title', '').lower()
+                sentiment = article.get('sentiment_score', 0)
+                comments = article.get('comment_count', 0)
+                
+                is_tesla = any(keyword in title_lower for keyword in ['tesla', 'elon', 'musk'])
+                
+                stats = author_stats[author]
+                stats['total_articles'] += 1
+                
+                if is_tesla:
+                    stats['tesla_articles'] += 1
+                    stats['tesla_sentiment_sum'] += sentiment
+                    stats['tesla_comments_sum'] += comments
+                else:
+                    stats['non_tesla_articles'] += 1
+                    stats['non_tesla_sentiment_sum'] += sentiment
+                    stats['non_tesla_comments_sum'] += comments
+            
+            # Calculate final metrics
+            author_analysis = []
+            for author, stats in author_stats.items():
+                if stats['total_articles'] >= 5:  # Only authors with 5+ articles
+                    analysis = {
+                        'author': author,
+                        'total_articles': stats['total_articles'],
+                        'tesla_articles': stats['tesla_articles'],
+                        'tesla_percentage': round((stats['tesla_articles'] / stats['total_articles']) * 100, 1),
+                        'avg_tesla_sentiment': round(stats['tesla_sentiment_sum'] / max(stats['tesla_articles'], 1), 3),
+                        'avg_tesla_comments': round(stats['tesla_comments_sum'] / max(stats['tesla_articles'], 1), 1),
+                        'avg_non_tesla_sentiment': round(stats['non_tesla_sentiment_sum'] / max(stats['non_tesla_articles'], 1), 3),
+                        'avg_non_tesla_comments': round(stats['non_tesla_comments_sum'] / max(stats['non_tesla_articles'], 1), 1)
+                    }
+                    author_analysis.append(analysis)
+            
+            # Sort by Tesla article count
+            author_analysis.sort(key=lambda x: x['tesla_articles'], reverse=True)
+            
+            print(f"Analyzed {len(author_analysis)} authors with 5+ articles")
+            return author_analysis
+            
+        except Exception as e:
+            print(f"Error getting author Tesla bias analysis: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+            return []
+
+    @staticmethod
+    def get_company_comparison(months=None):
+        """Compare engagement metrics across different EV companies mentioned in articles"""
+        try:
+            # Get all articles with sentiment scores
+            base_query = supabase.table("articles") \
+                .select("title, comment_count, sentiment_score, published_at") \
+                .not_.is_("sentiment_score", "null")
+            
+            # Apply date filter if specified
+            if months is not None:
+                from datetime import datetime, timedelta
+                start_date = (datetime.now() - timedelta(days=30 * months)).isoformat()
+                base_query = base_query.gte("published_at", start_date)
+            
+            # Get all data using pagination
+            all_articles = []
+            page_size = 1000
+            current_page = 0
+            
+            while True:
+                query = base_query.range(current_page * page_size, (current_page + 1) * page_size - 1)
+                response = query.execute()
+                page_data = response.data
+                
+                if not page_data:
+                    break
+                    
+                all_articles.extend(page_data)
+                
+                if len(page_data) < page_size:
+                    break
+                    
+                current_page += 1
+            
+            # Define company keywords and stats
+            companies = {
+                'Tesla/Elon': ['tesla', 'elon', 'musk'],
+                'BYD': ['byd'],
+                'Ford': ['ford'],
+                'GM': ['gm', 'general motors'],
+                'Rivian': ['rivian'],
+                'Lucid': ['lucid'],
+                'Nio': ['nio'],
+                'Volkswagen': ['volkswagen', 'vw'],
+                'BMW': ['bmw'],
+                'Mercedes': ['mercedes', 'mercedes-benz']
+            }
+            
+            company_stats = {}
+            for company in companies:
+                company_stats[company] = {
+                    'articles': [],
+                    'total_comments': 0,
+                    'avg_comments': 0,
+                    'avg_sentiment': 0,
+                    'negative_articles': 0,
+                    'positive_articles': 0
+                }
+            
+            # Classify articles by company mentions
+            for article in all_articles:
+                title_lower = article.get('title', '').lower()
+                comment_count = article.get('comment_count', 0)
+                sentiment = article.get('sentiment_score', 0)
+                
+                for company, keywords in companies.items():
+                    if any(keyword in title_lower for keyword in keywords):
+                        stats = company_stats[company]
+                        stats['articles'].append({
+                            'title': article.get('title'),
+                            'comments': comment_count,
+                            'sentiment': sentiment
+                        })
+                        stats['total_comments'] += comment_count
+                        
+                        if sentiment < -0.1:
+                            stats['negative_articles'] += 1
+                        elif sentiment > 0.1:
+                            stats['positive_articles'] += 1
+            
+            # Calculate averages and metrics
+            comparison_data = []
+            for company, stats in company_stats.items():
+                if len(stats['articles']) > 0:
+                    article_count = len(stats['articles'])
+                    avg_comments = round(stats['total_comments'] / article_count, 1)
+                    avg_sentiment = round(sum(a['sentiment'] for a in stats['articles']) / article_count, 3)
+                    
+                    comparison_data.append({
+                        'company': company,
+                        'article_count': article_count,
+                        'total_comments': stats['total_comments'],
+                        'avg_comments': avg_comments,
+                        'avg_sentiment': avg_sentiment,
+                        'negative_articles': stats['negative_articles'],
+                        'positive_articles': stats['positive_articles'],
+                        'negative_percentage': round((stats['negative_articles'] / article_count) * 100, 1)
+                    })
+            
+            # Sort by average comments (engagement)
+            comparison_data.sort(key=lambda x: x['avg_comments'], reverse=True)
+            
+            print(f"Compared engagement across {len(comparison_data)} EV companies")
+            return comparison_data
+            
+        except Exception as e:
+            print(f"Error getting company comparison: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+            return []
+
+    @staticmethod
+    def get_business_impact_metrics(months=None):
+        """Calculate key business impact metrics that quantify the value of Tesla hate content"""
+        try:
+            # Get sentiment data with Tesla classification
+            all_sentiment_data = Article.get_sentiment_data(months)
+            
+            if not all_sentiment_data:
+                return {}
+            
+            # Classify articles
+            tesla_articles = []
+            non_tesla_articles = []
+            tesla_negative = []
+            tesla_positive = []
+            non_tesla_negative = []
+            non_tesla_positive = []
+            
+            for article in all_sentiment_data:
+                title_lower = article.get('title', '').lower()
+                sentiment = article.get('sentiment_score', 0)
+                comments = article.get('comment_count', 0)
+                
+                is_tesla = any(keyword in title_lower for keyword in ['tesla', 'elon', 'musk'])
+                
+                if is_tesla:
+                    tesla_articles.append(article)
+                    if sentiment < -0.1:
+                        tesla_negative.append(article)
+                    elif sentiment > 0.1:
+                        tesla_positive.append(article)
+                else:
+                    non_tesla_articles.append(article)
+                    if sentiment < -0.1:
+                        non_tesla_negative.append(article)
+                    elif sentiment > 0.1:
+                        non_tesla_positive.append(article)
+            
+            # Calculate key metrics
+            tesla_avg_comments = sum(a.get('comment_count', 0) for a in tesla_articles) / max(len(tesla_articles), 1)
+            non_tesla_avg_comments = sum(a.get('comment_count', 0) for a in non_tesla_articles) / max(len(non_tesla_articles), 1)
+            
+            tesla_negative_avg = sum(a.get('comment_count', 0) for a in tesla_negative) / max(len(tesla_negative), 1)
+            tesla_positive_avg = sum(a.get('comment_count', 0) for a in tesla_positive) / max(len(tesla_positive), 1)
+            non_tesla_negative_avg = sum(a.get('comment_count', 0) for a in non_tesla_negative) / max(len(non_tesla_negative), 1)
+            
+            # Calculate multipliers
+            tesla_multiplier = round(tesla_avg_comments / max(non_tesla_avg_comments, 1), 2)
+            negative_tesla_multiplier = round(tesla_negative_avg / max(non_tesla_negative_avg, 1), 2)
+            tesla_sentiment_bias = round((len(tesla_negative) / max(len(tesla_articles), 1)) * 100, 1)
+            non_tesla_sentiment_bias = round((len(non_tesla_negative) / max(len(non_tesla_articles), 1)) * 100, 1)
+            
+            # Engagement intensity (negative vs positive Tesla)
+            tesla_negative_boost = 0
+            if tesla_positive_avg > 0:
+                tesla_negative_boost = round(((tesla_negative_avg - tesla_positive_avg) / tesla_positive_avg) * 100, 1)
+            
+            # Total Tesla traffic contribution
+            total_tesla_comments = sum(a.get('comment_count', 0) for a in tesla_articles)
+            total_all_comments = sum(a.get('comment_count', 0) for a in all_sentiment_data)
+            tesla_traffic_percentage = round((total_tesla_comments / max(total_all_comments, 1)) * 100, 1)
+            
+            metrics = {
+                # Core multipliers
+                'tesla_engagement_multiplier': tesla_multiplier,
+                'negative_tesla_multiplier': negative_tesla_multiplier,
+                
+                # Sentiment bias
+                'tesla_negative_percentage': tesla_sentiment_bias,
+                'non_tesla_negative_percentage': non_tesla_sentiment_bias,
+                'sentiment_bias_difference': round(tesla_sentiment_bias - non_tesla_sentiment_bias, 1),
+                
+                # Engagement metrics
+                'tesla_avg_comments': round(tesla_avg_comments, 1),
+                'non_tesla_avg_comments': round(non_tesla_avg_comments, 1),
+                'tesla_negative_avg_comments': round(tesla_negative_avg, 1),
+                'tesla_positive_avg_comments': round(tesla_positive_avg, 1),
+                'tesla_negative_boost_percentage': tesla_negative_boost,
+                
+                # Traffic contribution
+                'tesla_traffic_percentage': tesla_traffic_percentage,
+                'tesla_article_count': len(tesla_articles),
+                'non_tesla_article_count': len(non_tesla_articles),
+                'tesla_percentage_of_coverage': round((len(tesla_articles) / len(all_sentiment_data)) * 100, 1),
+                
+                # Estimated business impact (assuming comments = engagement = revenue)
+                'estimated_revenue_multiplier': tesla_multiplier,
+                'estimated_tesla_revenue_share': tesla_traffic_percentage
+            }
+            
+            print(f"Calculated business impact metrics from {len(all_sentiment_data)} articles")
+            return metrics
+            
+        except Exception as e:
+            print(f"Error calculating business impact metrics: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+            return {}

@@ -195,6 +195,12 @@ def reports():
     # Get monthly data for the trends chart
     monthly_data = Article.get_monthly_stats(months)
     
+    # Get additional data for enhanced business analysis
+    top_articles = Article.get_top_articles_analysis(20, months)
+    author_analysis = Article.get_author_tesla_bias(months)
+    company_comparison = Article.get_company_comparison(months)
+    business_metrics = Article.get_business_impact_metrics(months)
+    
     # Format the data for the chart
     chart_labels = []
     avg_comments_data = []
@@ -252,7 +258,11 @@ def reports():
                           article_count_data=article_count_data,
                           months=months,
                           sentiment_data=scatter_data,
-                          correlation=correlation)
+                          correlation=correlation,
+                          top_articles=top_articles,
+                          author_analysis=author_analysis,
+                          company_comparison=company_comparison,
+                          business_metrics=business_metrics)
 
 @bp.route('/analyze_sentiments', methods=['POST'])
 def analyze_sentiments():
@@ -287,3 +297,56 @@ def analyze_sentiments():
         flash(f'Error running sentiment analysis: {str(e)}', 'danger')
         
     return redirect(url_for('main.reports'))
+
+@bp.route('/blog/business-of-hate')
+def business_of_hate_blog():
+    """Dedicated blog post page for 'The Business of Hate: Anti-Tesla Blog by the Numbers'"""
+    # Use 6 months of data for the blog post analysis
+    months = 6
+    
+    # Get all the data needed for the blog post
+    filtered_stats = Article.get_statistics(months)
+    all_sentiment_data = Article.get_sentiment_data(months)
+    top_articles = Article.get_top_articles_analysis(20, months)
+    author_analysis = Article.get_author_tesla_bias(months)
+    company_comparison = Article.get_company_comparison(months)
+    business_metrics = Article.get_business_impact_metrics(months)
+    
+    # Get sentiment service for categorization
+    from .utils.sentiment_service import SentimentService
+    sentiment_service = SentimentService()
+    
+    # Process sentiment data for correlation analysis
+    scatter_data = []
+    for article in all_sentiment_data:
+        if article.get('sentiment_score') is not None and article.get('comment_count') is not None:
+            sentiment_category = sentiment_service.get_sentiment_category(article.get('sentiment_score'))
+            scatter_data.append({
+                'id': article.get('id'),
+                'title': article.get('title', 'Untitled'),
+                'sentiment_score': article.get('sentiment_score'),
+                'comment_count': article.get('comment_count'),
+                'published_at': article.get('published_at'),
+                'sentiment_category': sentiment_category
+            })
+    
+    # Calculate correlation
+    correlation = None
+    if len(scatter_data) >= 5:
+        try:
+            import numpy as np
+            sentiment_scores = [article['sentiment_score'] for article in scatter_data]
+            comment_counts = [article['comment_count'] for article in scatter_data]
+            correlation = np.corrcoef(sentiment_scores, comment_counts)[0, 1]
+        except Exception as e:
+            print(f"Error calculating correlation: {str(e)}")
+    
+    return render_template('blog_business_of_hate.html',
+                          stats=filtered_stats,
+                          sentiment_data=scatter_data,
+                          correlation=correlation,
+                          top_articles=top_articles,
+                          author_analysis=author_analysis,
+                          company_comparison=company_comparison,
+                          business_metrics=business_metrics,
+                          months=months)

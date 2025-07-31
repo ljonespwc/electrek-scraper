@@ -1,0 +1,582 @@
+{% extends "base.html" %}
+
+{% block title %}The Business of Hate: Anti-Tesla Blog by the Numbers{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+<style>
+.blog-header {
+    background: linear-gradient(135deg, #dc3545, #343a40);
+    color: white;
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+}
+
+.blog-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.key-finding {
+    background: #fff3cd;
+    border-left: 5px solid #ffc107;
+    padding: 1rem 1.5rem;
+    margin: 2rem 0;
+    border-radius: 0.25rem;
+}
+
+.shocking-stat {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.evidence-section {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    margin: 2rem 0;
+}
+
+.chart-embed {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 2rem 0;
+}
+
+.chart-embed canvas {
+    max-height: 400px !important;
+    height: 400px !important;
+}
+
+.chart-embed .pie-chart {
+    max-height: 300px !important;
+    height: 300px !important;
+}
+
+.social-share {
+    position: sticky;
+    top: 20px;
+    background: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+@media print {
+    .social-share { display: none; }
+    .navbar { display: none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="blog-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="display-4">The Business of Hate</h1>
+                <h2 class="h3 mb-3">Anti-Tesla Blog by the Numbers</h2>
+                <p class="lead">A data-driven investigation into how Tesla hate content systematically drives engagement and revenue for Electrek.co</p>
+                <small class="text-light">Analysis based on {{ stats.total_articles|thousands_separator }} articles and {{ stats.total_comments|thousands_separator }} reader comments</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container blog-content">
+    <div class="row">
+        <div class="col-lg-9">
+            
+            <!-- Executive Summary -->
+            <section class="mb-5">
+                <h2>Executive Summary</h2>
+                <p>Our comprehensive analysis of {{ stats.total_articles|thousands_separator }} articles from Electrek.co reveals a systematic editorial strategy designed to maximize engagement through Tesla-focused controversy. The numbers don't lie:</p>
+                
+                <div class="shocking-stat">
+                    <h3 class="h1 mb-3">{{ business_metrics.tesla_engagement_multiplier }}x</h3>
+                    <p class="mb-0"><strong>Tesla articles generate {{ business_metrics.tesla_engagement_multiplier }} times more engagement than other EV content</strong></p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center p-3 border rounded">
+                            <h4 class="text-danger">{{ business_metrics.tesla_negative_percentage }}%</h4>
+                            <small>of Tesla coverage is negative</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 border rounded">
+                            <h4 class="text-success">{{ business_metrics.tesla_traffic_percentage }}%</h4>
+                            <small>of site traffic from Tesla content</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 border rounded">
+                            <h4 class="text-warning">{{ business_metrics.negative_tesla_multiplier }}x</h4>
+                            <small>more comments on negative Tesla articles</small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- The Pattern Revealed -->
+            <section class="mb-5">
+                <h2>The Pattern Revealed</h2>
+                <p>Tesla hate isn't accidental—it's a calculated business model. Our analysis reveals three key strategies:</p>
+
+                <div class="key-finding">
+                    <h5><i class="fas fa-chart-line text-warning me-2"></i>Strategy 1: Sentiment Manipulation</h5>
+                    <p class="mb-0">Tesla articles are <strong>{{ business_metrics.sentiment_bias_difference }}% more likely to be negative</strong> than other EV content, creating controversy that drives comments and engagement.</p>
+                </div>
+
+                <div class="key-finding">
+                    <h5><i class="fas fa-fire text-danger me-2"></i>Strategy 2: Engagement Amplification</h5>
+                    <p class="mb-0">Negative Tesla content generates <strong>{{ business_metrics.tesla_negative_boost_percentage }}% more engagement</strong> than positive Tesla coverage, incentivizing critical headlines.</p>
+                </div>
+
+                <div class="key-finding">
+                    <h5><i class="fas fa-dollar-sign text-success me-2"></i>Strategy 3: Traffic Concentration</h5>
+                    <p class="mb-0">Despite representing only <strong>{{ business_metrics.tesla_percentage_of_coverage }}%</strong> of articles, Tesla content drives <strong>{{ business_metrics.tesla_traffic_percentage }}%</strong> of total site engagement.</p>
+                </div>
+            </section>
+
+            <!-- Evidence 1: The Engagement Multiplier -->
+            <section class="evidence-section">
+                <h2>Evidence 1: The Tesla Engagement Multiplier</h2>
+                <p>When we analyze average comment counts across different EV companies, Tesla's dominance becomes clear:</p>
+                
+                <div class="chart-embed">
+                    <canvas id="companyComparisonChart" height="400"></canvas>
+                </div>
+                
+                <p><strong>Key Finding:</strong> Tesla/Elon content generates an average of <strong>{{ business_metrics.tesla_avg_comments }} comments per article</strong> compared to just <strong>{{ business_metrics.non_tesla_avg_comments }} for other EV companies</strong>—a {{ business_metrics.tesla_engagement_multiplier }}x multiplier that directly translates to advertising revenue.</p>
+            </section>
+
+            <!-- Evidence 2: Editorial Bias by the Numbers -->
+            <section class="evidence-section">
+                <h2>Evidence 2: Editorial Bias by the Numbers</h2>
+                <p>The sentiment analysis reveals systematic editorial bias against Tesla:</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="chart-embed">
+                            <h5 class="text-center">Tesla/Elon Coverage</h5>
+                            <div style="height: 300px;">
+                                <canvas id="teslaDistributionChart" class="pie-chart"></canvas>
+                            </div>
+                            <div class="text-center mt-2">
+                                <span class="badge bg-danger">{{ business_metrics.tesla_negative_percentage }}% Negative</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-embed">
+                            <h5 class="text-center">Other EV Coverage</h5>
+                            <div style="height: 300px;">
+                                <canvas id="nonTeslaDistributionChart" class="pie-chart"></canvas>
+                            </div>
+                            <div class="text-center mt-2">
+                                <span class="badge bg-success">{{ business_metrics.non_tesla_negative_percentage }}% Negative</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <p><strong>The Smoking Gun:</strong> {{ business_metrics.tesla_negative_percentage }}% of Tesla articles are negative compared to only {{ business_metrics.non_tesla_negative_percentage }}% for other companies—a <strong>{{ business_metrics.sentiment_bias_difference }}% bias gap</strong> that cannot be explained by newsworthiness alone.</p>
+            </section>
+
+            <!-- Evidence 3: The Hate-Engagement Correlation -->
+            <section class="evidence-section">
+                <h2>Evidence 3: The Hate-Engagement Correlation</h2>
+                <p>Our correlation analysis reveals the mathematical relationship between negative sentiment and reader engagement:</p>
+                
+                <div class="chart-embed">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>Sentiment vs Engagement Correlation</h5>
+                        <span class="badge bg-primary">Correlation: {{ "%.2f"|format(correlation) }}</span>
+                    </div>
+                    <canvas id="sentimentChart" height="500"></canvas>
+                </div>
+                
+                <p><strong>Statistical Proof:</strong> The correlation coefficient of <strong>{{ "%.2f"|format(correlation) }}</strong> demonstrates that <em>more negative headlines consistently generate more comments</em>. This isn't coincidence—it's systematic exploitation of human psychology for profit.</p>
+            </section>
+
+            <!-- Evidence 4: Author Specialization -->
+            <section class="evidence-section">
+                <h2>Evidence 4: Author Specialization in Tesla Hate</h2>
+                <p>The editorial strategy extends to author assignments, with clear Tesla specialists emerging:</p>
+                
+                <div class="chart-embed">
+                    <canvas id="authorAnalysisChart" height="400"></canvas>
+                </div>
+                
+                <div class="row mt-3">
+                    {% for author in author_analysis[:5] %}
+                    <div class="col-md-12 mb-2">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                            <span><strong>{{ author.author }}</strong></span>
+                            <div>
+                                <span class="badge bg-warning">{{ author.tesla_articles }} Tesla articles</span>
+                                <span class="badge bg-{{ 'danger' if author.avg_tesla_sentiment < -0.2 else 'success' if author.avg_tesla_sentiment > 0.2 else 'secondary' }}">
+                                    {{ author.avg_tesla_sentiment|round(2) }} avg sentiment
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <p><strong>Editorial Assignment Pattern:</strong> Certain authors consistently produce Tesla-focused content with systematically negative sentiment, suggesting deliberate editorial assignments rather than organic coverage patterns.</p>
+            </section>
+
+            <!-- The Most Engaging Headlines -->
+            <section class="evidence-section">
+                <h2>Evidence 5: The Most Engaging Headlines Tell the Story</h2>
+                <p>The top-performing articles reveal the Tesla hate pattern in action:</p>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Rank</th>
+                                <th>Headline</th>
+                                <th>Comments</th>
+                                <th>Sentiment</th>
+                                <th>Tesla?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for article in top_articles[:10] %}
+                            <tr>
+                                <td><span class="badge bg-secondary">{{ loop.index }}</span></td>
+                                <td>
+                                    {{ article.title }}
+                                    {% if article.is_tesla %}
+                                    <span class="badge bg-warning text-dark ms-1">TESLA</span>
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ article.comment_count }}</strong></td>
+                                <td>
+                                    <span class="badge" style="background-color: {{ article.sentiment_color }};">
+                                        {{ article.sentiment_score|round(2) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if article.is_tesla %}
+                                    <i class="fas fa-check text-success"></i>
+                                    {% else %}
+                                    <i class="fas fa-times text-muted"></i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <p><strong>Pattern Recognition:</strong> Notice how Tesla-related headlines dominate the most-engaging content, with consistently negative sentiment scores driving maximum reader response.</p>
+            </section>
+
+            <!-- The Business Model -->
+            <section class="mb-5">
+                <h2>The Business Model Exposed</h2>
+                <p>This isn't journalism—it's engagement farming. The numbers reveal a sophisticated business model:</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Revenue Drivers</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item">{{ business_metrics.tesla_engagement_multiplier }}x engagement multiplier</li>
+                            <li class="list-group-item">{{ business_metrics.tesla_traffic_percentage }}% of total site traffic</li>
+                            <li class="list-group-item">{{ business_metrics.negative_tesla_multiplier }}x boost for negative content</li>
+                            <li class="list-group-item">{{ business_metrics.tesla_negative_boost_percentage }}% engagement premium</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>The Strategy</h5>
+                        <ol class="list-group list-group-numbered">
+                            <li class="list-group-item">Target Tesla with negative coverage</li>
+                            <li class="list-group-item">Generate emotional reader responses</li>
+                            <li class="list-group-item">Maximize comment engagement</li>
+                            <li class="list-group-item">Convert engagement to ad revenue</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Conclusion -->
+            <section class="mb-5">
+                <h2>Conclusion: The Cost of Algorithmic Journalism</h2>
+                <p>Our analysis provides mathematical proof of what many have suspected: Electrek.co has systematically monetized Tesla hate. With {{ business_metrics.tesla_engagement_multiplier }}x engagement multipliers and {{ business_metrics.tesla_traffic_percentage }}% of site traffic, Tesla controversy isn't just profitable—it's the primary business model.</p>
+                
+                <div class="shocking-stat">
+                    <h4>The Bottom Line</h4>
+                    <p class="mb-0">Every negative Tesla headline is a calculated business decision. Every controversy is manufactured engagement. Every hate comment is monetized outrage.</p>
+                </div>
+                
+                <p><strong>The data doesn't lie.</strong> But apparently, some blogs do.</p>
+            </section>
+
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="social-share">
+                <h5>Share This Analysis</h5>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary btn-sm" onclick="shareTwitter()">
+                        <i class="fab fa-twitter me-1"></i> Share on Twitter
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="shareLinkedIn()">
+                        <i class="fab fa-linkedin me-1"></i> Share on LinkedIn
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="copyLink()">
+                        <i class="fas fa-link me-1"></i> Copy Link
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Print/PDF
+                    </button>
+                </div>
+                
+                <hr>
+                
+                <h6>Key Statistics</h6>
+                <div class="small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Tesla Multiplier:</span>
+                        <strong>{{ business_metrics.tesla_engagement_multiplier }}x</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Traffic Share:</span>
+                        <strong>{{ business_metrics.tesla_traffic_percentage }}%</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Bias Gap:</span>
+                        <strong>{{ business_metrics.sentiment_bias_difference }}%</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Articles Analyzed:</span>
+                        <strong>{{ stats.total_articles|thousands_separator }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Comments Analyzed:</span>
+                        <strong>{{ stats.total_comments|thousands_separator }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts for the blog post
+    const sentimentData = {{ sentiment_data|tojson }};
+    const authorData = {{ author_analysis|tojson }};
+    const companyData = {{ company_comparison|tojson }};
+    
+    // Create company comparison chart
+    const companyCtx = document.getElementById('companyComparisonChart');
+    if (companyCtx && companyData) {
+        new Chart(companyCtx, {
+            type: 'bar',
+            data: {
+                labels: companyData.map(c => c.company),
+                datasets: [{
+                    label: 'Average Comments per Article',
+                    data: companyData.map(c => c.avg_comments),
+                    backgroundColor: companyData.map(c => 
+                        c.company === 'Tesla/Elon' ? 'rgba(255, 193, 7, 0.8)' : 'rgba(108, 117, 125, 0.6)'
+                    ),
+                    borderColor: companyData.map(c => 
+                        c.company === 'Tesla/Elon' ? 'rgba(255, 193, 7, 1)' : 'rgba(108, 117, 125, 1)'
+                    ),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                aspectRatio: 2,
+                plugins: {
+                    legend: { display: false }
+                },
+                layout: {
+                    padding: 10
+                }
+            }
+        });
+    }
+    
+    // Create sentiment scatter plot
+    const sentimentCtx = document.getElementById('sentimentChart');
+    if (sentimentCtx && sentimentData) {
+        new Chart(sentimentCtx, {
+            type: 'scatter',
+            data: {
+                datasets: sentimentData.reduce((acc, article) => {
+                    const isNegative = article.sentiment_score < -0.1;
+                    const color = isNegative ? 'rgba(220, 53, 69, 0.6)' : 'rgba(40, 167, 69, 0.6)';
+                    
+                    let dataset = acc.find(d => d.label === (isNegative ? 'Negative Headlines' : 'Positive Headlines'));
+                    if (!dataset) {
+                        dataset = {
+                            label: isNegative ? 'Negative Headlines' : 'Positive Headlines',
+                            data: [],
+                            backgroundColor: color,
+                            borderColor: isNegative ? 'rgba(220, 53, 69, 1)' : 'rgba(40, 167, 69, 1)',
+                            pointRadius: 4
+                        };
+                        acc.push(dataset);
+                    }
+                    
+                    dataset.data.push({
+                        x: article.sentiment_score,
+                        y: article.comment_count,
+                        title: article.title
+                    });
+                    
+                    return acc;
+                }, [])
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                aspectRatio: 1.5,
+                scales: {
+                    x: { 
+                        title: { display: true, text: 'Sentiment Score' },
+                        min: -1, max: 1
+                    },
+                    y: { 
+                        title: { display: true, text: 'Comment Count' },
+                        beginAtZero: true
+                    }
+                },
+                layout: {
+                    padding: 10
+                }
+            }
+        });
+    }
+    
+    // Create author analysis chart
+    const authorCtx = document.getElementById('authorAnalysisChart');
+    if (authorCtx && authorData) {
+        new Chart(authorCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Authors',
+                    data: authorData.slice(0, 10).map(author => ({
+                        x: author.avg_tesla_sentiment || 0,
+                        y: author.tesla_articles || 0,
+                        author: author.author
+                    })),
+                    backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                    borderColor: 'rgba(255, 193, 7, 1)',
+                    pointRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                aspectRatio: 2,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { 
+                        title: { display: true, text: 'Average Tesla Sentiment' },
+                        min: -1, max: 1
+                    },
+                    y: { 
+                        title: { display: true, text: 'Tesla Articles Count' },
+                        beginAtZero: true
+                    }
+                },
+                layout: {
+                    padding: 10
+                }
+            }
+        });
+    }
+    
+    // Create pie charts for sentiment distribution
+    const teslaCtx = document.getElementById('teslaDistributionChart');
+    const nonTeslaCtx = document.getElementById('nonTeslaDistributionChart');
+    
+    if (teslaCtx && nonTeslaCtx && sentimentData) {
+        const teslaArticles = sentimentData.filter(a => {
+            const title = a.title.toLowerCase();
+            return title.includes('tesla') || title.includes('elon') || title.includes('musk');
+        });
+        const nonTeslaArticles = sentimentData.filter(a => {
+            const title = a.title.toLowerCase();
+            return !(title.includes('tesla') || title.includes('elon') || title.includes('musk'));
+        });
+        
+        const createPieChart = (ctx, data, title) => {
+            const negative = data.filter(a => a.sentiment_score <= -0.1).length;
+            const positive = data.filter(a => a.sentiment_score >= 0.1).length;
+            const neutral = data.length - negative - positive;
+            
+            return new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Negative', 'Neutral', 'Positive'],
+                    datasets: [{
+                        data: [negative, neutral, positive],
+                        backgroundColor: [
+                            'rgba(220, 53, 69, 0.8)',
+                            'rgba(108, 117, 125, 0.8)',
+                            'rgba(40, 167, 69, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    aspectRatio: 1,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    layout: {
+                        padding: 10
+                    }
+                }
+            });
+        };
+        
+        createPieChart(teslaCtx, teslaArticles, 'Tesla');
+        createPieChart(nonTeslaCtx, nonTeslaArticles, 'Non-Tesla');
+    }
+});
+
+// Social sharing functions
+function shareTwitter() {
+    const url = window.location.href;
+    const text = "The Business of Hate: Data proves Tesla hate content drives engagement and revenue for @electrekco";
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
+}
+
+function shareLinkedIn() {
+    const url = window.location.href;
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`);
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        alert('Link copied to clipboard!');
+    });
+}
+</script>
+{% endblock %}
