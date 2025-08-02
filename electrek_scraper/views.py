@@ -350,3 +350,56 @@ def business_of_hate_blog():
                           company_comparison=company_comparison,
                           business_metrics=business_metrics,
                           months=months)
+
+@bp.route('/blog/business-of-hate-electrek')
+def business_of_hate_electrek():
+    """Medium-style article page for 'The Tesla Hate Machine' expose"""
+    # Use ALL available data for maximum impact
+    months = None  # None = all time data
+    
+    # Get all the data needed for the article
+    filtered_stats = Article.get_statistics(months)
+    all_sentiment_data = Article.get_sentiment_data(months)
+    top_articles = Article.get_top_articles_analysis(25, months)
+    author_analysis = Article.get_author_tesla_bias(months)
+    company_comparison = Article.get_company_comparison(months)
+    business_metrics = Article.get_business_impact_metrics(months)
+    
+    # Get sentiment service for categorization
+    from .utils.sentiment_service import SentimentService
+    sentiment_service = SentimentService()
+    
+    # Process sentiment data for correlation analysis
+    scatter_data = []
+    for article in all_sentiment_data:
+        if article.get('sentiment_score') is not None and article.get('comment_count') is not None:
+            sentiment_category = sentiment_service.get_sentiment_category(article.get('sentiment_score'))
+            scatter_data.append({
+                'id': article.get('id'),
+                'title': article.get('title', 'Untitled'),
+                'sentiment_score': article.get('sentiment_score'),
+                'comment_count': article.get('comment_count'),
+                'published_at': article.get('published_at'),
+                'sentiment_category': sentiment_category
+            })
+    
+    # Calculate correlation
+    correlation = None
+    if len(scatter_data) >= 5:
+        try:
+            import numpy as np
+            sentiment_scores = [article['sentiment_score'] for article in scatter_data]
+            comment_counts = [article['comment_count'] for article in scatter_data]
+            correlation = np.corrcoef(sentiment_scores, comment_counts)[0, 1]
+        except Exception as e:
+            print(f"Error calculating correlation: {str(e)}")
+    
+    return render_template('business_of_hate_electrek.html',
+                          stats=filtered_stats,
+                          sentiment_data=scatter_data,
+                          correlation=correlation,
+                          top_articles=top_articles,
+                          author_analysis=author_analysis,
+                          company_comparison=company_comparison,
+                          business_metrics=business_metrics,
+                          months=months)
