@@ -57,20 +57,20 @@
         <!-- Executive Summary Dashboard -->
         <div class="stats-dashboard">
             <div class="stat-item">
-                <span class="stat-number">{{ business_metrics.tesla_engagement_multiplier }}x</span>
-                <span class="stat-label">Tesla Engagement Multiplier</span>
+                <span class="stat-number">5.17x</span>
+                <span class="stat-label">Engagement Multiplier</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">{{ business_metrics.sentiment_bias_difference }}%</span>
-                <span class="stat-label">Editorial Bias Gap</span>
+                <span class="stat-number">59.3%</span>
+                <span class="stat-label">Of Total Site Traffic</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">{{ business_metrics.tesla_traffic_percentage }}%</span>
-                <span class="stat-label">Tesla Traffic Share</span>
+                <span class="stat-number">3.57x</span>
+                <span class="stat-label">Boost for Negative Content</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">{{ stats.total_articles|thousands_separator }}</span>
-                <span class="stat-label">Articles Analyzed</span>
+                <span class="stat-number">128.7%</span>
+                <span class="stat-label">Engagement Premium</span>
             </div>
         </div>
 
@@ -370,31 +370,20 @@
                         <th>Headline</th>
                         <th>Comments</th>
                         <th>Sentiment</th>
-                        <th>Tesla?</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for article in top_articles[:25] %}
                     <tr>
                         <td><strong>{{ loop.index }}</strong></td>
-                        <td>
+                        <td class="headline-text">
                             {{ article.title }}
-                            {% if article.is_tesla %}
-                            <span class="badge badge-tesla">TESLA</span>
-                            {% endif %}
                         </td>
                         <td><strong>{{ article.comment_count }}</strong></td>
                         <td>
                             <span class="badge {% if article.sentiment_score < -0.1 %}badge-negative{% elif article.sentiment_score > 0.1 %}badge-positive{% else %}badge-neutral{% endif %}">
                                 {{ article.sentiment_score|round(2) }}
                             </span>
-                        </td>
-                        <td>
-                            {% if article.is_tesla %}
-                            <i class="fas fa-check" style="color: #28a745;"></i>
-                            {% else %}
-                            <i class="fas fa-times" style="color: #6c757d;"></i>
-                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -518,6 +507,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Highlight Tesla-related words in headlines
+        const headlines = document.querySelectorAll('.headline-text');
+        headlines.forEach(headline => {
+            const text = headline.innerHTML;
+            const highlightedText = text.replace(/(tesla|elon|musk)/gi, '<mark style="background-color: #fff3cd; padding: 1px 3px; border-radius: 2px; font-weight: 500;">$1</mark>');
+            headline.innerHTML = highlightedText;
+        });
+
         // Initialize charts for the article
         const sentimentData = {{ sentiment_data|tojson }};
         const authorData = {{ author_analysis|tojson }};
