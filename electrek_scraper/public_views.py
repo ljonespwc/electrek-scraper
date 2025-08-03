@@ -104,36 +104,56 @@ def google_auth():
 def auth_callback():
     """Handle OAuth callback from Supabase"""
     try:
+        print("=== AUTH CALLBACK DEBUG ===")
+        print(f"Request URL: {request.url}")
+        print(f"Request args: {dict(request.args)}")
+        print(f"Request form: {dict(request.form)}")
+        
         # Check if we got an authorization code (PKCE flow)
         code = request.args.get('code')
+        print(f"Authorization code: {code}")
+        
         if code:
+            print("Attempting to exchange code for session...")
             # Exchange the code for a session using Supabase
-            auth_response = supabase.auth.exchange_code_for_session(code)
+            auth_response = supabase.auth.exchange_code_for_session({
+                "auth_code": code
+            })
+            print(f"Auth response: {auth_response}")
             
             if auth_response.session:
+                print("Session created successfully!")
                 # Store session data
                 session['access_token'] = auth_response.session.access_token
                 session['refresh_token'] = auth_response.session.refresh_token
                 
                 # Get user info and check admin status
+                print("Getting user info...")
                 user_info = get_user_info()
+                print(f"User info: {user_info}")
+                
                 if user_info:
                     session['user_email'] = user_info.get('email')
                     flash('Successfully logged in!', 'success')
                     return redirect(url_for('admin.index'))
                 else:
+                    print("Failed to get user information")
                     flash('Failed to get user information', 'error')
                     return redirect(url_for('public.login'))
             else:
+                print("Failed to create session - no session in response")
                 flash('Failed to create session', 'error')
                 return redirect(url_for('public.login'))
         else:
+            print("No code parameter, trying hash-based approach")
             # No code parameter, try the hash-based approach
             return render_template('auth/callback.html')
         
     except Exception as e:
         print(f"Auth callback error: {e}")
-        flash('Authentication failed', 'error')
+        import traceback
+        traceback.print_exc()
+        flash(f'Authentication failed: {str(e)}', 'error')
         return redirect(url_for('public.login'))
 
 @bp.route('/auth/session', methods=['POST'])
