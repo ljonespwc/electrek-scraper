@@ -104,9 +104,32 @@ def google_auth():
 def auth_callback():
     """Handle OAuth callback from Supabase"""
     try:
-        # Get the session from URL fragments (handled by JavaScript)
-        # This route serves the callback page that processes the auth
-        return render_template('auth/callback.html')
+        # Check if we got an authorization code (PKCE flow)
+        code = request.args.get('code')
+        if code:
+            # Exchange the code for a session using Supabase
+            auth_response = supabase.auth.exchange_code_for_session(code)
+            
+            if auth_response.session:
+                # Store session data
+                session['access_token'] = auth_response.session.access_token
+                session['refresh_token'] = auth_response.session.refresh_token
+                
+                # Get user info and check admin status
+                user_info = get_user_info()
+                if user_info:
+                    session['user_email'] = user_info.get('email')
+                    flash('Successfully logged in!', 'success')
+                    return redirect(url_for('admin.index'))
+                else:
+                    flash('Failed to get user information', 'error')
+                    return redirect(url_for('public.login'))
+            else:
+                flash('Failed to create session', 'error')
+                return redirect(url_for('public.login'))
+        else:
+            # No code parameter, try the hash-based approach
+            return render_template('auth/callback.html')
         
     except Exception as e:
         print(f"Auth callback error: {e}")
