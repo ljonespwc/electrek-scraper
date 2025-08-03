@@ -15,21 +15,77 @@ supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_KEY)
 @bp.route('/')
 def index():
     """Public landing page with article listings"""
-    return render_template('landing_clean.html')
+    from .utils.reading_time import ReadingTimeEstimator
+    from flask import current_app
+    import os
+    
+    # Calculate reading time for articles
+    reading_estimator = ReadingTimeEstimator()
+    
+    # Define articles with their template paths
+    articles = [
+        {
+            'title': 'The Business of Hate: Anti-Tesla Blog by the Numbers',
+            'description': 'We analyzed 2,962 articles and 156,636 comments from the leading EV publication. The results reveal a sophisticated business model built on Tesla hate.',
+            'url': 'public.tesla_hate_machine',
+            'template_path': 'articles/tesla_hate_machine.html',
+            'category': 'Analysis'
+        }
+    ]
+    
+    # Add reading times to articles
+    for article in articles:
+        template_path = os.path.join(current_app.root_path, 'templates', article['template_path'])
+        try:
+            with open(template_path, 'r', encoding='utf-8') as f:
+                article_content = f.read()
+            article['reading_time'] = reading_estimator.format_reading_time(article_content)
+        except:
+            article['reading_time'] = "12 min read"  # Fallback
+    
+    return render_template('landing_clean.html', articles=articles)
 
 @bp.route('/articles/tesla-hate-machine')
 def tesla_hate_machine():
     """Tesla Hate Machine article - public access"""
+    from .utils.cache_service import ChartDataCache
+    
     # Use ALL available data for maximum impact
     months = None  # None = all time data
+    cache = ChartDataCache(ttl_days=30)  # Cache for 1 month
     
-    # Get all the data needed for the article
-    filtered_stats = Article.get_statistics(months)
-    all_sentiment_data = Article.get_sentiment_data(months)
-    top_articles = Article.get_top_articles_analysis(25, months)
-    author_analysis = Article.get_author_tesla_bias(months)
-    company_comparison = Article.get_company_comparison(months)
-    business_metrics = Article.get_business_impact_metrics(months)
+    # Try to get all chart data from cache
+    chart_data = cache.get('tesla_article_complete', months)
+    
+    if chart_data is None:
+        # Generate fresh data and cache it
+        filtered_stats = Article.get_statistics(months)
+        all_sentiment_data = Article.get_sentiment_data(months)
+        top_articles = Article.get_top_articles_analysis(25, months)
+        author_analysis = Article.get_author_tesla_bias(months)
+        company_comparison = Article.get_company_comparison(months)
+        business_metrics = Article.get_business_impact_metrics(months)
+        
+        # Bundle all data for caching
+        chart_data = {
+            'filtered_stats': filtered_stats,
+            'all_sentiment_data': all_sentiment_data,
+            'top_articles': top_articles,
+            'author_analysis': author_analysis,
+            'company_comparison': company_comparison,
+            'business_metrics': business_metrics
+        }
+        
+        # Cache the complete dataset
+        cache.set('tesla_article_complete', chart_data, months)
+    
+    # Extract data from cache
+    filtered_stats = chart_data['filtered_stats']
+    all_sentiment_data = chart_data['all_sentiment_data']
+    top_articles = chart_data['top_articles']
+    author_analysis = chart_data['author_analysis']
+    company_comparison = chart_data['company_comparison']
+    business_metrics = chart_data['business_metrics']
     
     # Get sentiment service for categorization
     from .utils.sentiment_service import SentimentService
@@ -59,6 +115,22 @@ def tesla_hate_machine():
         except Exception as e:
             print(f"Error calculating correlation: {str(e)}")
     
+    # Calculate reading time for the article
+    from .utils.reading_time import ReadingTimeEstimator
+    reading_estimator = ReadingTimeEstimator()
+    
+    # Read the article template to calculate reading time
+    from flask import current_app
+    import os
+    
+    template_path = os.path.join(current_app.root_path, 'templates', 'articles', 'tesla_hate_machine.html')
+    try:
+        with open(template_path, 'r', encoding='utf-8') as f:
+            article_content = f.read()
+        reading_time = reading_estimator.format_reading_time(article_content)
+    except:
+        reading_time = "12 min read"  # Fallback
+    
     return render_template('articles/tesla_hate_machine.html',
                           stats=filtered_stats,
                           sentiment_data=scatter_data,
@@ -67,6 +139,7 @@ def tesla_hate_machine():
                           author_analysis=author_analysis,
                           company_comparison=company_comparison,
                           business_metrics=business_metrics,
+                          reading_time=reading_time,
                           months=months)
 
 @bp.route('/login')

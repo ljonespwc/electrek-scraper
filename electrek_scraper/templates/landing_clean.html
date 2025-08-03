@@ -261,18 +261,16 @@
         <section class="articles-section">
             <h2>Featured Articles</h2>
             <div class="article-grid">
-                <a href="{{ url_for('public.tesla_hate_machine') }}" class="article-card">
+                {% for article in articles %}
+                <a href="{{ url_for(article.url) }}" class="article-card">
                     <div class="article-content">
-                        <h3>The Business of Hate: Anti-Tesla Blog by the Numbers</h3>
-                        <p class="article-excerpt">
-                            An in-depth analysis of media sentiment surrounding Tesla and its correlation with reader engagement. 
-                            Using data science to uncover patterns in automotive journalism and the business incentives behind controversy.
-                        </p>
+                        <h3>{{ article.title }}</h3>
+                        <p class="article-excerpt">{{ article.description }}</p>
                         <div class="article-footer">
                             <div class="article-meta">
-                                <span class="read-time">12 min read</span>
+                                <span class="read-time">{{ article.reading_time }}</span>
                                 <div class="article-meta-separator"></div>
-                                <span class="article-type">Data Analysis</span>
+                                <span class="article-type">{{ article.category }}</span>
                             </div>
                             <div class="chart-preview">
                                 <i class="fas fa-chart-line"></i>
@@ -284,6 +282,7 @@
                         Data Visualization
                     </div>
                 </a>
+                {% endfor %}
             </div>
         </section>
     </div>
