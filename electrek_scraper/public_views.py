@@ -72,7 +72,7 @@ def tesla_hate_machine():
 @bp.route('/login')
 def login():
     """Google OAuth login page"""
-    return render_template('auth/login.html')
+    return render_template('auth/login_standalone.html')
 
 @bp.route('/auth/google')
 def google_auth():
