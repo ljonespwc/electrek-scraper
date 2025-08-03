@@ -175,12 +175,12 @@ def logout():
         clear_auth_session()
         
         flash('Successfully logged out', 'success')
-        return redirect(url_for('public.index'))
+        return redirect(url_for('public.login'))
         
     except Exception as e:
         print(f"Logout error: {e}")
         clear_auth_session()  # Clear session anyway
-        return redirect(url_for('public.index'))
+        return redirect(url_for('public.login'))
 
 @bp.route('/health')
 def health_check():
