@@ -93,11 +93,16 @@
             display: flex;
             gap: 1.5rem;
             align-items: flex-start;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
         }
 
         .article-card:hover {
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             border-color: #d1d5db;
+            text-decoration: none;
+            color: inherit;
         }
 
         .article-card:last-child {
@@ -132,15 +137,6 @@
             line-height: 1.4;
         }
 
-        .article-content h3 a {
-            text-decoration: none;
-            color: inherit;
-            transition: color 0.2s ease;
-        }
-
-        .article-content h3 a:hover {
-            color: #1a1a1a;
-        }
 
         .article-excerpt {
             color: #757575;
@@ -184,12 +180,6 @@
             color: #757575;
             font-size: 0.8125rem;
             font-weight: 400;
-            text-decoration: none;
-        }
-
-        .chart-preview:hover {
-            color: #1a1a1a;
-            text-decoration: none;
         }
 
         .chart-preview i {
@@ -304,9 +294,9 @@
         <section class="articles-section">
             <h2>Featured Articles</h2>
             <div class="article-grid">
-                <article class="article-card">
+                <a href="{{ url_for('public.tesla_hate_machine') }}" class="article-card">
                     <div class="article-content">
-                        <h3><a href="{{ url_for('public.tesla_hate_machine') }}">The Tesla Hate Machine</a></h3>
+                        <h3>The Tesla Hate Machine</h3>
                         <p class="article-excerpt">
                             An in-depth analysis of media sentiment surrounding Tesla and its correlation with reader engagement. 
                             Using data science to uncover patterns in automotive journalism and the business incentives behind controversy.
@@ -317,16 +307,16 @@
                                 <div class="article-meta-separator"></div>
                                 <span class="article-type">Data Analysis</span>
                             </div>
-                            <a href="{{ url_for('public.tesla_hate_machine') }}" class="chart-preview">
+                            <div class="chart-preview">
                                 <i class="fas fa-chart-line"></i>
                                 <span>Interactive charts</span>
-                            </a>
+                            </div>
                         </div>
                     </div>
                     <div class="article-image">
                         Data Visualization
                     </div>
-                </article>
+                </a>
             </div>
         </section>
 
