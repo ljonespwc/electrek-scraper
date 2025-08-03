@@ -79,10 +79,13 @@ def google_auth():
     """Initiate Google OAuth flow"""
     try:
         # Get the redirect URL from Supabase
+        # Build the proper redirect URL using the current request's host
+        redirect_url = f"{request.scheme}://{request.host}/auth/callback"
+        
         auth_response = supabase.auth.sign_in_with_oauth({
             "provider": "google",
             "options": {
-                "redirect_to": request.url_root + "auth/callback"
+                "redirect_to": redirect_url
             }
         })
         
