@@ -9,8 +9,10 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
     
     # Register blueprints
-    from .views import bp as main_bp
-    app.register_blueprint(main_bp)
+    from .public_views import bp as public_bp
+    from .admin_views import bp as admin_bp
+    app.register_blueprint(public_bp)
+    app.register_blueprint(admin_bp)
     
     # Add custom template filters
     @app.template_filter('nl2br')

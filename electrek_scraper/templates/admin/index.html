@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "admin/base.html" %}
 
 {% block title %}Latest Articles{% endblock %}
 
@@ -14,7 +14,7 @@
     </div>
     <div class="col-md-6 text-md-end d-flex align-items-center justify-content-md-end">
         <div class="scraper-controls">
-            <form action="{{ url_for('main.scrape') }}" method="post" class="d-inline-flex">
+            <form action="{{ url_for('admin.scrape') }}" method="post" class="d-inline-flex">
                 <div class="input-group me-2">
                     <span class="input-group-text">Articles</span>
                     <input type="number" class="form-control" name="article_limit" value="25" min="1" max="2000">
@@ -30,7 +30,7 @@
         </div>
     </div>
     <div class="mb-3 text-end">
-        <form action="{{ url_for('main.analyze_sentiments') }}" method="post" class="d-inline">
+        <form action="{{ url_for('admin.analyze_sentiments') }}" method="post" class="d-inline">
             <button type="submit" class="btn btn-outline-primary btn-sm">
                 <i class="fas fa-brain me-1"></i> Analyze Article Sentiments
             </button>
@@ -45,13 +45,13 @@
         <div class="d-flex justify-content-between mb-3">
             <!-- Left side: sorting buttons -->
             <div class="btn-group" role="group">
-                <a href="{{ url_for('main.index', sort='newest') }}"
+                <a href="{{ url_for('admin.index', sort='newest') }}"
                     class="btn btn-outline-secondary btn-sm {% if sort == 'newest' %}active{% endif %}">Newest First</a>
-                <a href="{{ url_for('main.index', sort='oldest') }}"
+                <a href="{{ url_for('admin.index', sort='oldest') }}"
                     class="btn btn-outline-secondary btn-sm {% if sort == 'oldest' %}active{% endif %}">Oldest First</a>
-                <a href="{{ url_for('main.index', sort='most_comments') }}"
+                <a href="{{ url_for('admin.index', sort='most_comments') }}"
                     class="btn btn-outline-secondary btn-sm {% if sort == 'most_comments' %}active{% endif %}">Most Comments</a>
-                <a href="{{ url_for('main.index', sort='most_negative') }}"
+                <a href="{{ url_for('admin.index', sort='most_negative') }}"
                     class="btn btn-outline-secondary btn-sm {% if sort == 'most_negative' %}active{% endif %}">Most Negative</a>
             </div>
 

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="{% block og_title %}Tesla Analysis & EV Industry Insights{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Data-driven analysis of electric vehicle industry trends and Tesla coverage{% endblock %}">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="{% block twitter_title %}Tesla Analysis & EV Industry Insights{% endblock %}">
+    <meta property="twitter:description" content="{% block twitter_description %}Data-driven analysis of electric vehicle industry trends{% endblock %}">
+    
+    <title>{% block title %}Tesla Analysis & EV Industry Insights{% endblock %}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/medium-style.css') }}">
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <!-- Clean article navigation -->
+    <nav class="article-nav">
+        <div class="article-nav-content">
+            <a href="{{ url_for('public.index') }}" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                Articles
+            </a>
+            <div class="nav-links">
+                <a href="{{ url_for('public.tesla_hate_machine') }}" class="nav-article-link 
+                   {%- if request.endpoint == 'public.tesla_hate_machine' %} active{% endif %}">
+                    Tesla Hate Machine
+                </a>
+                <!-- Future articles will be added here -->
+            </div>
+            <button class="share-button" onclick="shareArticle()">
+                <i class="fas fa-share-alt"></i> Share
+            </button>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Chart.js if needed -->
+    {% block scripts %}
+    <script>
+    // Social sharing function
+    function shareArticle() {
+        if (navigator.share) {
+            navigator.share({
+                title: document.title,
+                text: document.querySelector('meta[name="description"]')?.content || 'Tesla Analysis & EV Industry Insights',
+                url: window.location.href
+            });
+        } else {
+            // Fallback to Twitter
+            const url = window.location.href;
+            const text = document.title;
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
+        }
+    }
+    </script>
+    {% endblock %}
+</body>
+</html>
