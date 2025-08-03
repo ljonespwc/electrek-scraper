@@ -15,7 +15,7 @@ supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_KEY)
 @bp.route('/')
 def index():
     """Public landing page with article listings"""
-    return render_template('landing.html')
+    return render_template('landing_beautiful.html')
 
 @bp.route('/articles/tesla-hate-machine')
 def tesla_hate_machine():
