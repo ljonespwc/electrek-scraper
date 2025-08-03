@@ -1,7 +1,7 @@
 """
 Public-facing routes for articles and authentication
 """
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, make_response
 from supabase import create_client
 from .config import Config
 from .models import Article
@@ -43,7 +43,11 @@ def index():
         except:
             article['reading_time'] = "12 min read"  # Fallback
     
-    return render_template('landing_clean.html', articles=articles)
+    response = make_response(render_template('landing_clean.html', articles=articles))
+    
+    # Cache landing page for 6 hours on Vercel's CDN
+    response.headers['Cache-Control'] = 'public, max-age=21600'
+    return response
 
 @bp.route('/articles/tesla-hate-machine')
 def tesla_hate_machine():
@@ -131,16 +135,20 @@ def tesla_hate_machine():
     except:
         reading_time = "12 min read"  # Fallback
     
-    return render_template('articles/tesla_hate_machine.html',
-                          stats=filtered_stats,
-                          sentiment_data=scatter_data,
-                          correlation=correlation,
-                          top_articles=top_articles,
-                          author_analysis=author_analysis,
-                          company_comparison=company_comparison,
-                          business_metrics=business_metrics,
-                          reading_time=reading_time,
-                          months=months)
+    response = make_response(render_template('articles/tesla_hate_machine.html',
+                                           stats=filtered_stats,
+                                           sentiment_data=scatter_data,
+                                           correlation=correlation,
+                                           top_articles=top_articles,
+                                           author_analysis=author_analysis,
+                                           company_comparison=company_comparison,
+                                           business_metrics=business_metrics,
+                                           reading_time=reading_time,
+                                           months=months))
+    
+    # Cache for 30 days on Vercel's CDN
+    response.headers['Cache-Control'] = 'public, max-age=2592000'
+    return response
 
 @bp.route('/login')
 def login():
