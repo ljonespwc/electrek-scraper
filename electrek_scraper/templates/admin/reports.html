@@ -99,15 +99,15 @@
         <h3>Date Range</h3>
         <p>Select time period to analyze</p>
         <div class="date-buttons">
-            <a href="{{ url_for('main.reports', months=1, active_tab=request.args.get('active_tab')) }}"
+            <a href="{{ url_for('admin.reports', months=1, active_tab=request.args.get('active_tab')) }}"
                 class="date-btn {% if months == 1 %}active{% endif %}">1 Month</a>
-            <a href="{{ url_for('main.reports', months=3, active_tab=request.args.get('active_tab')) }}"
+            <a href="{{ url_for('admin.reports', months=3, active_tab=request.args.get('active_tab')) }}"
                 class="date-btn {% if months == 3 %}active{% endif %}">3 Months</a>
-            <a href="{{ url_for('main.reports', months=6, active_tab=request.args.get('active_tab')) }}"
+            <a href="{{ url_for('admin.reports', months=6, active_tab=request.args.get('active_tab')) }}"
                 class="date-btn {% if months == 6 %}active{% endif %}">6 Months</a>
-            <a href="{{ url_for('main.reports', months=12, active_tab=request.args.get('active_tab')) }}"
+            <a href="{{ url_for('admin.reports', months=12, active_tab=request.args.get('active_tab')) }}"
                 class="date-btn {% if months == 12 %}active{% endif %}">1 Year</a>
-            <a href="{{ url_for('main.reports', months=24, active_tab=request.args.get('active_tab')) }}"
+            <a href="{{ url_for('admin.reports', months=24, active_tab=request.args.get('active_tab')) }}"
                 class="date-btn {% if months == 24 %}active{% endif %}">2 Years</a>
         </div>
     </div>

@@ -24,7 +24,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+            <a class="navbar-brand" href="{{ url_for('admin.index') }}">
                 <i class="fas fa-bolt me-2"></i>Electrek Monitor
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -33,12 +33,12 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.index') }}">
+                        <a class="nav-link" href="{{ url_for('admin.index') }}">
                             <i class="fas fa-home me-1"></i> Home
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.reports') }}">
+                        <a class="nav-link" href="{{ url_for('admin.reports') }}">
                             <i class="fas fa-chart-bar me-1"></i> Reports
                         </a>
                     </li>
@@ -47,8 +47,8 @@
                             <i class="fas fa-newspaper me-1"></i> Articles
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="blogDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('main.business_of_hate_blog') }}">Business of Hate (Dashboard)</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('main.business_of_hate_electrek') }}">Tesla Hate Machine (Article)</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.business_of_hate_blog') }}">Business of Hate (Dashboard)</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('public.tesla_hate_machine') }}" target="_blank">Tesla Hate Machine (Public)</a></li>
                         </ul>
                     </li>
                 </ul>
