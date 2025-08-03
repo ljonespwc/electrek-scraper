@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Tesla Analysis & EV Industry Insights">
+    <meta property="og:description" content="Data-driven analysis of electric vehicle industry trends and Tesla coverage">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="Tesla Analysis & EV Industry Insights">
+    <meta property="twitter:description" content="Data-driven analysis of electric vehicle industry trends">
+    
+    <title>Tesla Analysis & EV Industry Insights</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            text-align: center;
+            padding: 6rem 0 4rem;
+        }
+
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #1a1a1a;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: #666;
+            margin-bottom: 0;
+            line-height: 1.4;
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Articles Section */
+        .articles-section {
+            margin-bottom: 4rem;
+        }
+
+        .articles-section h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            letter-spacing: -0.01em;
+        }
+
+        .article-card {
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 2.5rem;
+            transition: all 0.2s ease;
+            background: #ffffff;
+        }
+
+        .article-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+            border-color: #d1d5db;
+        }
+
+        .article-content h3 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            letter-spacing: -0.01em;
+        }
+
+        .article-content h3 a {
+            text-decoration: none;
+            color: inherit;
+            transition: color 0.2s ease;
+        }
+
+        .article-content h3 a:hover {
+            color: #007bff;
+        }
+
+        .article-excerpt {
+            color: #666;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+            font-size: 1.125rem;
+            font-weight: 400;
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            color: #888;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        .chart-preview {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #007bff;
+            font-size: 0.875rem;
+            padding: 0.75rem 1.25rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #007bff;
+            font-weight: 500;
+        }
+
+        .chart-preview i {
+            font-size: 1rem;
+        }
+
+        /* About Section */
+        .about-section {
+            background-color: #f8f9fa;
+            padding: 2.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 2rem;
+        }
+
+        .about-section h2 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            letter-spacing: -0.01em;
+        }
+
+        .about-section p {
+            color: #666;
+            line-height: 1.7;
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 400;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1.5rem;
+            }
+            
+            .hero-section {
+                padding: 4rem 0 3rem;
+            }
+            
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.125rem;
+            }
+            
+            .articles-section h2 {
+                font-size: 1.75rem;
+            }
+            
+            .article-card {
+                padding: 2rem;
+            }
+            
+            .article-content h3 {
+                font-size: 1.5rem;
+            }
+            
+            .about-section {
+                padding: 2rem;
+            }
+            
+            .about-section h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .hero-section h1 {
+                font-size: 2rem;
+            }
+            
+            .article-card {
+                padding: 1.5rem;
+            }
+            
+            .about-section {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="hero-section">
+            <h1>Tesla Analysis & EV Industry Insights</h1>
+            <p class="hero-subtitle">Data-driven analysis of electric vehicle industry trends and media coverage</p>
+        </header>
+
+        <section class="articles-section">
+            <h2>Featured Articles</h2>
+            <div class="article-grid">
+                <article class="article-card">
+                    <div class="article-content">
+                        <h3><a href="{{ url_for('public.tesla_hate_machine') }}">The Tesla Hate Machine</a></h3>
+                        <p class="article-excerpt">
+                            An in-depth analysis of media sentiment surrounding Tesla and its correlation with reader engagement. 
+                            Using data science to uncover patterns in automotive journalism and the business incentives behind controversy.
+                        </p>
+                        <div class="article-meta">
+                            <span class="read-time">12 min read</span>
+                            <span class="article-type">Data Analysis</span>
+                        </div>
+                    </div>
+                    <div class="article-preview">
+                        <div class="chart-preview">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Interactive charts & analysis</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="about-section">
+            <h2>About This Analysis</h2>
+            <p>
+                This site presents data-driven analysis of electric vehicle industry coverage, 
+                with a particular focus on Tesla-related content and reader engagement patterns. 
+                Using modern data science techniques, we examine the relationship between 
+                sentiment and engagement in automotive journalism, revealing how controversy 
+                drives clicks and shapes media narratives.
+            </p>
+        </section>
+    </div>
+</body>
+</html>
