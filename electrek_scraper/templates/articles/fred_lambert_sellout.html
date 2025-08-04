@@ -356,12 +356,15 @@
         <div id="sparkle-section">
             <div class="sparkle-count-display">
                 <span id="current-sparkle-count">{{ sparkle_count }}</span>
-                <span class="sparkle-label">sparkles</span>
+                <span class="sparkle-label">total sparkles</span>
             </div>
             <button id="sparkle-btn" class="sparkle-button" onclick="addSparkle()">
                 ✨ Give it a sparkle!
             </button>
-            <p class="sparkle-help-text">Show your appreciation for this analysis</p>
+            <p class="sparkle-help-text">Show your appreciation for this analysis • Click up to 100 times!</p>
+            <div id="user-progress" style="margin-top: 1rem; font-size: 0.9rem; color: #666; display: none;">
+                <span id="user-progress-text">Your sparkles: 0/100</span>
+            </div>
         </div>
     </div>
 
@@ -587,18 +590,48 @@ document.addEventListener('DOMContentLoaded', function() {
         createPieChart(nonTeslaCtx, nonTeslaArticles, 'Non-Tesla');
     }
 
+    // Load user's sparkle count when page loads
+    loadUserSparkleCount();
+
 });
 
 // Sparkle functionality (global scope)
-let hasSparkled = false;
+let userSparkleCount = 0;
+let isSparkleInProgress = false;
+
+// Get progressive button text based on user contribution count
+function getSparkleButtonText(count) {
+    if (count === 0) return '✨ Give it a sparkle!';
+    if (count < 10) return `✨ Sparkle it! (${count})`;
+    if (count < 25) return `✨✨ Double sparkle! (${count})`;
+    if (count < 50) return `✨✨✨ Triple sparkle! (${count})`;
+    if (count < 100) return `🌟 Super sparkle! (${count})`;
+    return `🎉 Maxed out! (100)`;
+}
+
+// Get celebration message for milestones
+function getCelebrationMessage(milestone) {
+    switch(milestone) {
+        case 10: return '🎯 10 sparkles! You\'re getting the hang of this!';
+        case 25: return '🔥 25 sparkles! You\'re on fire!';
+        case 50: return '⭐ 50 sparkles! Halfway to legend status!';
+        case 100: return '🏆 100 sparkles! You\'re a SparkPubs legend!';
+        default: return 'Thank you for the sparkle! ✨';
+    }
+}
 
 function addSparkle() {
-        if (hasSparkled) {
-            showMessage('You already sparkled this article today!', 'warning');
+        if (isSparkleInProgress) return;
+        
+        const btn = document.getElementById('sparkle-btn');
+        
+        // Check if user is at limit
+        if (userSparkleCount >= 100) {
+            showMessage('You\'ve reached the maximum sparkles (100)! Thanks for your enthusiasm! 🎉', 'info');
             return;
         }
         
-        const btn = document.getElementById('sparkle-btn');
+        isSparkleInProgress = true;
         btn.disabled = true;
         btn.innerHTML = '✨ Sparkling...';
         
@@ -611,30 +644,47 @@ function addSparkle() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Update count
-                document.getElementById('current-sparkle-count').textContent = data.count;
+                // Update counts
+                document.getElementById('current-sparkle-count').textContent = data.total_count;
+                userSparkleCount = data.user_count;
                 
-                // Update button
-                btn.innerHTML = '✨ Sparkled!';
-                btn.style.background = '#28a745';
+                // Update button with progressive text
+                btn.innerHTML = getSparkleButtonText(userSparkleCount);
                 
-                // Mark as sparkled
-                hasSparkled = true;
+                // Update user progress display
+                updateUserProgress();
                 
-                // Show success message
-                showMessage('Thank you for the sparkle! ✨', 'success');
+                // Progressive button styling
+                if (userSparkleCount >= 100) {
+                    btn.style.background = '#ffd700'; // Gold for maxed out
+                    btn.disabled = true;
+                } else if (userSparkleCount >= 50) {
+                    btn.style.background = '#ff6b00'; // Orange for high engagement
+                    btn.disabled = false;
+                } else if (userSparkleCount >= 25) {
+                    btn.style.background = '#e55a00'; // Darker orange
+                    btn.disabled = false;
+                } else {
+                    btn.style.background = '#ff6b00'; // Default orange
+                    btn.disabled = false;
+                }
                 
-                // Add sparkle animation
-                animateSparkle();
+                // Show celebration message only for milestones
+                if (data.milestone) {
+                    const message = getCelebrationMessage(data.milestone);
+                    showMessage(message, 'celebration');
+                }
+                
+                // Enhanced animation based on count
+                animateSparkle(userSparkleCount, data.milestone);
                 
             } else {
                 // Handle error
                 btn.disabled = false;
-                btn.innerHTML = '✨ Give it a sparkle!';
+                btn.innerHTML = getSparkleButtonText(userSparkleCount);
                 
-                if (data.error === 'Already sparkled today') {
-                    hasSparkled = true;
-                    showMessage('You already sparkled this article today!', 'warning');
+                if (data.at_limit) {
+                    showMessage('You\'ve reached the maximum sparkles (100)! 🎉', 'info');
                 } else {
                     showMessage('Failed to add sparkle. Please try again.', 'error');
                 }
@@ -643,43 +693,211 @@ function addSparkle() {
         .catch(error => {
             console.error('Error:', error);
             btn.disabled = false;
-            btn.innerHTML = '✨ Give it a sparkle!';
+            btn.innerHTML = getSparkleButtonText(userSparkleCount);
             showMessage('Failed to add sparkle. Please try again.', 'error');
+        })
+        .finally(() => {
+            isSparkleInProgress = false;
         });
+}
+
+// Load user's current sparkle count on page load
+function loadUserSparkleCount() {
+    fetch(`/api/engagement/{{ article_slug }}/sparkle/user`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                userSparkleCount = data.user_count;
+                const btn = document.getElementById('sparkle-btn');
+                btn.innerHTML = getSparkleButtonText(userSparkleCount);
+                
+                // Update user progress display
+                updateUserProgress();
+                
+                if (data.at_limit) {
+                    btn.style.background = '#ffd700';
+                    btn.disabled = true;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading user sparkle count:', error);
+        });
+}
+
+function updateUserProgress() {
+    const progressDiv = document.getElementById('user-progress');
+    const progressText = document.getElementById('user-progress-text');
+    
+    if (userSparkleCount > 0) {
+        progressDiv.style.display = 'block';
+        progressText.textContent = `Your sparkles: ${userSparkleCount}/100`;
+        
+        // Add progress bar visual
+        if (!document.getElementById('progress-bar')) {
+            const progressBar = document.createElement('div');
+            progressBar.id = 'progress-bar';
+            progressBar.style.cssText = `
+                width: 200px;
+                height: 4px;
+                background: #e0e0e0;
+                border-radius: 2px;
+                margin: 0.5rem auto;
+                overflow: hidden;
+            `;
+            
+            const progressFill = document.createElement('div');
+            progressFill.id = 'progress-fill';
+            progressFill.style.cssText = `
+                height: 100%;
+                background: linear-gradient(90deg, #ff6b00, #ffd700);
+                border-radius: 2px;
+                transition: width 0.3s ease;
+                width: ${(userSparkleCount / 100) * 100}%;
+            `;
+            
+            progressBar.appendChild(progressFill);
+            progressDiv.appendChild(progressBar);
+        } else {
+            // Update existing progress bar
+            const progressFill = document.getElementById('progress-fill');
+            progressFill.style.width = `${(userSparkleCount / 100) * 100}%`;
+        }
+    }
 }
 
 function showMessage(message, type) {
         // Create message element
         const msgEl = document.createElement('div');
+        
+        const bgColor = {
+            'success': '#28a745',
+            'warning': '#ffc107', 
+            'error': '#dc3545',
+            'info': '#17a2b8',
+            'celebration': 'linear-gradient(45deg, #ff6b00, #ffd700)'
+        }[type] || '#dc3545';
+        
         msgEl.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
             padding: 12px 20px;
-            border-radius: 4px;
+            border-radius: 8px;
             color: white;
             font-weight: 500;
             z-index: 1000;
-            background: ${type === 'success' ? '#28a745' : type === 'warning' ? '#ffc107' : '#dc3545'};
+            background: ${bgColor};
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
         `;
         msgEl.textContent = message;
         
         document.body.appendChild(msgEl);
         
-        // Remove after 3 seconds
+        // Slide in animation
         setTimeout(() => {
-            document.body.removeChild(msgEl);
-        }, 3000);
+            msgEl.style.transform = 'translateX(0)';
+        }, 10);
+        
+        // Remove after 4 seconds with slide out animation
+        setTimeout(() => {
+            msgEl.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (document.body.contains(msgEl)) {
+                    document.body.removeChild(msgEl);
+                }
+            }, 300);
+        }, 4000);
 }
 
-function animateSparkle() {
+function animateSparkle(userCount, milestone) {
         const btn = document.getElementById('sparkle-btn');
-        btn.style.transform = 'scale(1.1)';
-        btn.style.transition = 'transform 0.2s ease';
+        
+        // Base button animation
+        btn.style.transform = 'scale(1.2)';
+        btn.style.transition = 'transform 0.3s ease';
         
         setTimeout(() => {
             btn.style.transform = 'scale(1)';
-        }, 200);
+        }, 300);
+        
+        // Create sparkle burst effect
+        createSparkleBurst(btn, userCount, milestone);
+}
+
+function createSparkleBurst(btn, userCount, milestone) {
+        const rect = btn.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        // Number of sparkles based on user count and milestone
+        let sparkleCount = Math.min(3 + Math.floor(userCount / 10), 12);
+        if (milestone) {
+            sparkleCount = Math.min(sparkleCount * 2, 20);
+        }
+        
+        // Create sparkle particles
+        for (let i = 0; i < sparkleCount; i++) {
+            const sparkle = document.createElement('div');
+            sparkle.innerHTML = getRandomSparkleEmoji();
+            sparkle.style.cssText = `
+                position: fixed;
+                left: ${centerX}px;
+                top: ${centerY}px;
+                font-size: ${16 + Math.random() * 8}px;
+                pointer-events: none;
+                z-index: 1001;
+                animation: sparkle-burst 1.5s ease-out forwards;
+                --angle: ${(360 / sparkleCount) * i + Math.random() * 30 - 15}deg;
+                --distance: ${50 + Math.random() * 100}px;
+            `;
+            
+            document.body.appendChild(sparkle);
+            
+            // Remove sparkle after animation
+            setTimeout(() => {
+                if (document.body.contains(sparkle)) {
+                    document.body.removeChild(sparkle);
+                }
+            }, 1500);
+        }
+        
+        // Special milestone celebration
+        if (milestone) {
+            createMilestoneCelebration(centerX, centerY, milestone);
+        }
+}
+
+function getRandomSparkleEmoji() {
+        const sparkles = ['✨', '⭐', '🌟', '💫', '⚡', '🎆', '🎇'];
+        return sparkles[Math.floor(Math.random() * sparkles.length)];
+}
+
+function createMilestoneCelebration(centerX, centerY, milestone) {
+        // Create larger celebration effect for milestones
+        const celebration = document.createElement('div');
+        celebration.innerHTML = milestone === 100 ? '🏆' : '🎉';
+        celebration.style.cssText = `
+            position: fixed;
+            left: ${centerX}px;
+            top: ${centerY - 50}px;
+            font-size: 40px;
+            pointer-events: none;
+            z-index: 1002;
+            animation: milestone-celebration 2s ease-out forwards;
+            transform: translate(-50%, -50%);
+        `;
+        
+        document.body.appendChild(celebration);
+        
+        setTimeout(() => {
+            if (document.body.contains(celebration)) {
+                document.body.removeChild(celebration);
+            }
+        }, 2000);
 }
 </script>
 
@@ -740,6 +958,65 @@ function animateSparkle() {
 .sparkle-count {
     color: #ff6b00;
     font-weight: 500;
+}
+
+/* Sparkle Animation Keyframes */
+@keyframes sparkle-burst {
+    0% {
+        transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--distance) * -0.7)) scale(1.2);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--distance) * -1)) scale(0.5);
+        opacity: 0;
+    }
+}
+
+@keyframes milestone-celebration {
+    0% {
+        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+        opacity: 1;
+    }
+    20% {
+        transform: translate(-50%, -50%) scale(1.5) rotate(10deg);
+        opacity: 1;
+    }
+    40% {
+        transform: translate(-50%, -50%) scale(1.2) rotate(-5deg);
+        opacity: 1;
+    }
+    60% {
+        transform: translate(-50%, -50%) scale(1.3) rotate(5deg);
+        opacity: 1;
+    }
+    80% {
+        transform: translate(-50%, -50%) scale(1.1) rotate(-2deg);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(0.8) rotate(0deg);
+        opacity: 0;
+    }
+}
+
+/* Progressive button styling */
+.sparkle-button {
+    transition: all 0.3s ease, transform 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.sparkle-button:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(255, 107, 0, 0.4);
+}
+
+.sparkle-button:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
 }
 </style>
 {% endblock %}

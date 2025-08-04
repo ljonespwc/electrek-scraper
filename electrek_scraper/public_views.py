@@ -318,32 +318,49 @@ def get_engagement(article_slug):
 
 @bp.route('/api/engagement/<article_slug>/sparkle', methods=['POST'])
 def add_sparkle(article_slug):
-    """Add a sparkle to an article"""
+    """Add a sparkle to an article (up to 100 per user)"""
     try:
-        # Get client IP for rate limiting
+        # Get client IP and create user identifier
         client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
         
-        # Check if this IP already sparkled this article today
-        from datetime import date
-        cache_key = f"sparkle_{article_slug}_{client_ip}_{date.today()}"
+        # Get or create session ID for better user tracking
+        if 'user_session' not in session:
+            import uuid
+            session['user_session'] = str(uuid.uuid4())
         
-        # Simple in-memory rate limiting (you could use Redis for production)
-        if hasattr(add_sparkle, 'rate_limit_cache'):
-            if cache_key in add_sparkle.rate_limit_cache:
-                return {'success': False, 'error': 'Already sparkled today'}, 429
+        user_identifier = f"{client_ip}_{session['user_session']}"
+        
+        # Check user's current contribution count
+        user_response = supabase.table('user_sparkle_contributions').select('*').eq('article_slug', article_slug).eq('user_identifier', user_identifier).execute()
+        
+        if user_response.data:
+            current_contribution = user_response.data[0]['contribution_count']
+            if current_contribution >= 100:
+                return {'success': False, 'error': 'Maximum sparkles reached (100)', 'user_count': current_contribution, 'at_limit': True}, 429
+            
+            # Increment user contribution
+            new_user_count = current_contribution + 1
+            supabase.table('user_sparkle_contributions').update({
+                'contribution_count': new_user_count,
+                'last_contributed_at': 'NOW()',
+                'updated_at': 'NOW()'
+            }).eq('id', user_response.data[0]['id']).execute()
         else:
-            add_sparkle.rate_limit_cache = set()
+            # First sparkle from this user
+            new_user_count = 1
+            supabase.table('user_sparkle_contributions').insert({
+                'article_slug': article_slug,
+                'user_identifier': user_identifier,
+                'contribution_count': 1
+            }).execute()
         
-        # Add to rate limit cache
-        add_sparkle.rate_limit_cache.add(cache_key)
-        
-        # Insert or update sparkle count
+        # Update total article sparkle count
         response = supabase.table('article_engagement').select('*').eq('article_slug', article_slug).eq('interaction_type', 'sparkle').execute()
         
         if response.data:
             # Update existing count
-            new_count = response.data[0]['count'] + 1
-            supabase.table('article_engagement').update({'count': new_count, 'updated_at': 'NOW()'}).eq('id', response.data[0]['id']).execute()
+            new_total_count = response.data[0]['count'] + 1
+            supabase.table('article_engagement').update({'count': new_total_count, 'updated_at': 'NOW()'}).eq('id', response.data[0]['id']).execute()
         else:
             # Insert new record
             supabase.table('article_engagement').insert({
@@ -351,11 +368,47 @@ def add_sparkle(article_slug):
                 'interaction_type': 'sparkle',
                 'count': 1
             }).execute()
-            new_count = 1
+            new_total_count = 1
         
-        return {'success': True, 'count': new_count}
+        # Check for milestones
+        milestone = None
+        if new_user_count in [10, 25, 50, 100]:
+            milestone = new_user_count
+        
+        return {
+            'success': True, 
+            'total_count': new_total_count,
+            'user_count': new_user_count,
+            'milestone': milestone,
+            'at_limit': new_user_count >= 100
+        }
     except Exception as e:
         print(f"Error adding sparkle: {e}")
+        return {'success': False, 'error': str(e)}, 500
+
+@bp.route('/api/engagement/<article_slug>/sparkle/user', methods=['GET'])
+def get_user_sparkle_count(article_slug):
+    """Get current user's sparkle contribution count"""
+    try:
+        # Get client IP and session ID
+        client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+        
+        if 'user_session' not in session:
+            return {'success': True, 'user_count': 0, 'at_limit': False}
+        
+        user_identifier = f"{client_ip}_{session['user_session']}"
+        
+        # Get user's contribution count
+        user_response = supabase.table('user_sparkle_contributions').select('*').eq('article_slug', article_slug).eq('user_identifier', user_identifier).execute()
+        
+        if user_response.data:
+            user_count = user_response.data[0]['contribution_count']
+            return {'success': True, 'user_count': user_count, 'at_limit': user_count >= 100}
+        else:
+            return {'success': True, 'user_count': 0, 'at_limit': False}
+            
+    except Exception as e:
+        print(f"Error getting user sparkle count: {e}")
         return {'success': False, 'error': str(e)}, 500
 
 @bp.route('/api/articles/<article_slug>/metadata')
