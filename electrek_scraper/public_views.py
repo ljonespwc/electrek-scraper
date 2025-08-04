@@ -26,9 +26,9 @@ def index():
     articles = [
         {
             'title': 'The Business of Hate: Anti-Tesla Blog by the Numbers',
-            'description': 'We analyzed 2,962 articles and 156,636 comments from the leading EV publication. The results reveal a sophisticated business model built on Tesla hate.',
-            'url': 'public.tesla_hate_machine',
-            'template_path': 'articles/tesla_hate_machine.html',
+            'description': 'I analyzed 2,962 articles and 156,636 comments from the EV publication, Electrek. The results reveal a not-so-clever business model built on Tesla hate.',
+            'url': 'public.fred_lambert_sellout',
+            'template_path': 'articles/fred_lambert_sellout.html',
             'category': 'Analysis'
         }
     ]
@@ -49,109 +49,9 @@ def index():
     response.headers['Cache-Control'] = 'public, max-age=21600'
     return response
 
-@bp.route('/articles/tesla-hate-machine')
-def tesla_hate_machine():
-    """Tesla Hate Machine article - public access"""
-    from .utils.cache_service import ChartDataCache
-    
-    # Use ALL available data for maximum impact
-    months = None  # None = all time data
-    cache = ChartDataCache(ttl_days=30)  # Cache for 1 month
-    
-    # Try to get all chart data from cache
-    chart_data = cache.get('tesla_article_complete', months)
-    
-    if chart_data is None:
-        # Generate fresh data and cache it
-        filtered_stats = Article.get_statistics(months)
-        all_sentiment_data = Article.get_sentiment_data(months)
-        top_articles = Article.get_top_articles_analysis(25, months)
-        author_analysis = Article.get_author_tesla_bias(months)
-        company_comparison = Article.get_company_comparison(months)
-        business_metrics = Article.get_business_impact_metrics(months)
-        
-        # Bundle all data for caching
-        chart_data = {
-            'filtered_stats': filtered_stats,
-            'all_sentiment_data': all_sentiment_data,
-            'top_articles': top_articles,
-            'author_analysis': author_analysis,
-            'company_comparison': company_comparison,
-            'business_metrics': business_metrics
-        }
-        
-        # Cache the complete dataset
-        cache.set('tesla_article_complete', chart_data, months)
-    
-    # Extract data from cache
-    filtered_stats = chart_data['filtered_stats']
-    all_sentiment_data = chart_data['all_sentiment_data']
-    top_articles = chart_data['top_articles']
-    author_analysis = chart_data['author_analysis']
-    company_comparison = chart_data['company_comparison']
-    business_metrics = chart_data['business_metrics']
-    
-    # Get sentiment service for categorization
-    from .utils.sentiment_service import SentimentService
-    sentiment_service = SentimentService()
-    
-    # Process sentiment data for correlation analysis
-    scatter_data = []
-    for article in all_sentiment_data:
-        if article.get('sentiment_score') is not None and article.get('comment_count') is not None:
-            sentiment_category = sentiment_service.get_sentiment_category(article.get('sentiment_score'))
-            scatter_data.append({
-                'id': article.get('id'),
-                'title': article.get('title', 'Untitled'),
-                'sentiment_score': article.get('sentiment_score'),
-                'comment_count': article.get('comment_count'),
-                'published_at': article.get('published_at'),
-                'sentiment_category': sentiment_category
-            })
-    
-    # Calculate correlation
-    correlation = None
-    if len(scatter_data) >= 5:
-        try:
-            sentiment_scores = [article['sentiment_score'] for article in scatter_data]
-            comment_counts = [article['comment_count'] for article in scatter_data]
-            correlation = np.corrcoef(sentiment_scores, comment_counts)[0, 1]
-        except Exception as e:
-            print(f"Error calculating correlation: {str(e)}")
-    
-    # Calculate reading time for the article
-    from .utils.reading_time import ReadingTimeEstimator
-    reading_estimator = ReadingTimeEstimator()
-    
-    # Read the article template to calculate reading time
-    from flask import current_app
-    import os
-    
-    template_path = os.path.join(current_app.root_path, 'templates', 'articles', 'tesla_hate_machine.html')
-    try:
-        with open(template_path, 'r', encoding='utf-8') as f:
-            article_content = f.read()
-        reading_time = reading_estimator.format_reading_time(article_content)
-    except:
-        reading_time = "12 min read"  # Fallback
-    
-    response = make_response(render_template('articles/tesla_hate_machine.html',
-                                           stats=filtered_stats,
-                                           sentiment_data=scatter_data,
-                                           correlation=correlation,
-                                           top_articles=top_articles,
-                                           author_analysis=author_analysis,
-                                           company_comparison=company_comparison,
-                                           business_metrics=business_metrics,
-                                           reading_time=reading_time,
-                                           months=months))
-    
-    # Cache for 30 days on Vercel's CDN
-    response.headers['Cache-Control'] = 'public, max-age=2592000'
-    return response
 
-@bp.route('/articles/tesla-hate-machine-sharp')
-def tesla_hate_machine_sharp():
+@bp.route('/articles/fred-lambert-sellout')
+def fred_lambert_sellout():
     """Tesla Hate Machine Sharp article - public access"""
     from .utils.cache_service import ChartDataCache
     
@@ -228,7 +128,7 @@ def tesla_hate_machine_sharp():
     from flask import current_app
     import os
     
-    template_path = os.path.join(current_app.root_path, 'templates', 'articles', 'tesla_hate_machine_sharp.html')
+    template_path = os.path.join(current_app.root_path, 'templates', 'articles', 'fred_lambert_sellout.html')
     try:
         with open(template_path, 'r', encoding='utf-8') as f:
             article_content = f.read()
@@ -236,7 +136,7 @@ def tesla_hate_machine_sharp():
     except:
         reading_time = "10 min read"  # Fallback for shorter version
     
-    response = make_response(render_template('articles/tesla_hate_machine_sharp.html',
+    response = make_response(render_template('articles/fred_lambert_sellout.html',
                                            stats=filtered_stats,
                                            sentiment_data=scatter_data,
                                            correlation=correlation,
