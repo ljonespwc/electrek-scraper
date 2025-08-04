@@ -772,3 +772,82 @@ class Article:
             import traceback
             print(traceback.format_exc())
             return {}
+
+    @staticmethod
+    def get_article_metadata(article_slug):
+        """Get article metadata including reading time and word count"""
+        try:
+            response = supabase.table('articles_metadata').select('*').eq('article_slug', article_slug).execute()
+            return response.data[0] if response.data else None
+        except Exception as e:
+            print(f"Error getting article metadata: {str(e)}")
+            return None
+
+    @staticmethod
+    def get_article_engagement(article_slug):
+        """Get engagement data for an article"""
+        try:
+            response = supabase.table('article_engagement').select('*').eq('article_slug', article_slug).execute()
+            
+            engagement_data = {}
+            for item in response.data:
+                engagement_data[item['interaction_type']] = item['count']
+            
+            return engagement_data
+        except Exception as e:
+            print(f"Error getting article engagement: {str(e)}")
+            return {}
+
+    @staticmethod
+    def add_sparkle(article_slug):
+        """Add a sparkle to an article (returns new count)"""
+        try:
+            # Check if sparkle record exists
+            response = supabase.table('article_engagement').select('*').eq('article_slug', article_slug).eq('interaction_type', 'sparkle').execute()
+            
+            if response.data:
+                # Update existing count
+                new_count = response.data[0]['count'] + 1
+                supabase.table('article_engagement').update({
+                    'count': new_count, 
+                    'updated_at': 'NOW()'
+                }).eq('id', response.data[0]['id']).execute()
+            else:
+                # Insert new record
+                supabase.table('article_engagement').insert({
+                    'article_slug': article_slug,
+                    'interaction_type': 'sparkle',
+                    'count': 1
+                }).execute()
+                new_count = 1
+            
+            return new_count
+        except Exception as e:
+            print(f"Error adding sparkle: {str(e)}")
+            return None
+
+    @staticmethod
+    def create_article_metadata(article_slug, title, word_count, reading_time_minutes):
+        """Create or update article metadata"""
+        try:
+            # Try to insert new record
+            supabase.table('articles_metadata').insert({
+                'article_slug': article_slug,
+                'title': title,
+                'word_count': word_count,
+                'reading_time_minutes': reading_time_minutes
+            }).execute()
+            return True
+        except Exception as e:
+            # If insert fails (likely due to unique constraint), try update
+            try:
+                supabase.table('articles_metadata').update({
+                    'title': title,
+                    'word_count': word_count,
+                    'reading_time_minutes': reading_time_minutes,
+                    'updated_at': 'NOW()'
+                }).eq('article_slug', article_slug).execute()
+                return True
+            except Exception as e2:
+                print(f"Error creating/updating article metadata: {str(e2)}")
+                return False

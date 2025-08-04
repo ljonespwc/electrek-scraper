@@ -267,7 +267,7 @@
         </header>
 
         <section class="articles-section">
-            <h2>Latest Analysis</h2>
+            <h2>Latest Pubs</h2>
             <div class="article-grid">
                 {% for article in articles %}
                 <a href="{{ url_for(article.url) }}" class="article-card">
@@ -277,6 +277,10 @@
                         <div class="article-footer">
                             <div class="article-meta">
                                 <span class="read-time">{{ article.reading_time }}</span>
+                                {% if article.show_sparkles %}
+                                <div class="article-meta-separator"></div>
+                                <span class="sparkle-count">✨ {{ article.sparkle_count }}</span>
+                                {% endif %}
                                 <div class="article-meta-separator"></div>
                                 <span class="article-type">{{ article.category }}</span>
                             </div>

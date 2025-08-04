@@ -33,15 +33,32 @@ def index():
         }
     ]
     
-    # Add reading times to articles
+    # Add reading times and engagement data from database
     for article in articles:
-        template_path = os.path.join(current_app.root_path, 'templates', article['template_path'])
-        try:
-            with open(template_path, 'r', encoding='utf-8') as f:
-                article_content = f.read()
-            article['reading_time'] = reading_estimator.format_reading_time(article_content)
-        except:
-            article['reading_time'] = "12 min read"  # Fallback
+        # Extract article slug from URL
+        article_slug = article['url'].split('.')[-1]  # e.g., 'public.fred_lambert_sellout' -> 'fred_lambert_sellout'
+        article_slug = article_slug.replace('_', '-')  # Convert to kebab-case for database
+        
+        # Get article metadata (reading time, word count)
+        metadata = Article.get_article_metadata(article_slug)
+        if metadata:
+            reading_minutes = metadata['reading_time_minutes']
+            article['reading_time'] = f"{reading_minutes} min read" if reading_minutes != 1 else "1 min read"
+        else:
+            # Fallback to calculation if not in database
+            template_path = os.path.join(current_app.root_path, 'templates', article['template_path'])
+            try:
+                with open(template_path, 'r', encoding='utf-8') as f:
+                    article_content = f.read()
+                article['reading_time'] = reading_estimator.format_reading_time(article_content)
+            except:
+                article['reading_time'] = "10 min read"  # Fallback
+        
+        # Get engagement data (sparkles)
+        engagement = Article.get_article_engagement(article_slug)
+        sparkle_count = engagement.get('sparkle', 0)
+        article['sparkle_count'] = sparkle_count
+        article['show_sparkles'] = sparkle_count > 50
     
     response = make_response(render_template('landing_clean.html', articles=articles))
     
@@ -120,21 +137,33 @@ def fred_lambert_sellout():
         except Exception as e:
             print(f"Error calculating correlation: {str(e)}")
     
-    # Calculate reading time for the article
-    from .utils.reading_time import ReadingTimeEstimator
-    reading_estimator = ReadingTimeEstimator()
+    # Get reading time and engagement data from database
+    article_slug = 'fred-lambert-sellout'
     
-    # Read the article template to calculate reading time
-    from flask import current_app
-    import os
+    # Get article metadata (reading time)
+    metadata = Article.get_article_metadata(article_slug)
+    if metadata:
+        reading_minutes = metadata['reading_time_minutes']
+        reading_time = f"{reading_minutes} min read" if reading_minutes != 1 else "1 min read"
+    else:
+        # Fallback to calculation if not in database
+        from .utils.reading_time import ReadingTimeEstimator
+        reading_estimator = ReadingTimeEstimator()
+        from flask import current_app
+        import os
+        
+        template_path = os.path.join(current_app.root_path, 'templates', 'articles', 'fred_lambert_sellout.html')
+        try:
+            with open(template_path, 'r', encoding='utf-8') as f:
+                article_content = f.read()
+            reading_time = reading_estimator.format_reading_time(article_content)
+        except:
+            reading_time = "10 min read"  # Fallback
     
-    template_path = os.path.join(current_app.root_path, 'templates', 'articles', 'fred_lambert_sellout.html')
-    try:
-        with open(template_path, 'r', encoding='utf-8') as f:
-            article_content = f.read()
-        reading_time = reading_estimator.format_reading_time(article_content)
-    except:
-        reading_time = "10 min read"  # Fallback for shorter version
+    # Get engagement data (sparkles)
+    engagement = Article.get_article_engagement(article_slug)
+    sparkle_count = engagement.get('sparkle', 0)
+    show_sparkles = sparkle_count > 50
     
     response = make_response(render_template('articles/fred_lambert_sellout.html',
                                            stats=filtered_stats,
@@ -145,6 +174,9 @@ def fred_lambert_sellout():
                                            company_comparison=company_comparison,
                                            business_metrics=business_metrics,
                                            reading_time=reading_time,
+                                           sparkle_count=sparkle_count,
+                                           show_sparkles=show_sparkles,
+                                           article_slug=article_slug,
                                            months=months))
     
     # Cache for 30 days on Vercel's CDN
@@ -268,3 +300,74 @@ def logout():
 def health_check():
     """Public health check endpoint"""
     return {'status': 'ok', 'timestamp': datetime.now().isoformat()}
+
+@bp.route('/api/engagement/<article_slug>')
+def get_engagement(article_slug):
+    """Get engagement data for an article"""
+    try:
+        response = supabase.table('article_engagement').select('*').eq('article_slug', article_slug).execute()
+        
+        engagement_data = {}
+        for item in response.data:
+            engagement_data[item['interaction_type']] = item['count']
+        
+        return {'success': True, 'data': engagement_data}
+    except Exception as e:
+        print(f"Error getting engagement: {e}")
+        return {'success': False, 'error': str(e)}, 500
+
+@bp.route('/api/engagement/<article_slug>/sparkle', methods=['POST'])
+def add_sparkle(article_slug):
+    """Add a sparkle to an article"""
+    try:
+        # Get client IP for rate limiting
+        client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+        
+        # Check if this IP already sparkled this article today
+        from datetime import date
+        cache_key = f"sparkle_{article_slug}_{client_ip}_{date.today()}"
+        
+        # Simple in-memory rate limiting (you could use Redis for production)
+        if hasattr(add_sparkle, 'rate_limit_cache'):
+            if cache_key in add_sparkle.rate_limit_cache:
+                return {'success': False, 'error': 'Already sparkled today'}, 429
+        else:
+            add_sparkle.rate_limit_cache = set()
+        
+        # Add to rate limit cache
+        add_sparkle.rate_limit_cache.add(cache_key)
+        
+        # Insert or update sparkle count
+        response = supabase.table('article_engagement').select('*').eq('article_slug', article_slug).eq('interaction_type', 'sparkle').execute()
+        
+        if response.data:
+            # Update existing count
+            new_count = response.data[0]['count'] + 1
+            supabase.table('article_engagement').update({'count': new_count, 'updated_at': 'NOW()'}).eq('id', response.data[0]['id']).execute()
+        else:
+            # Insert new record
+            supabase.table('article_engagement').insert({
+                'article_slug': article_slug,
+                'interaction_type': 'sparkle',
+                'count': 1
+            }).execute()
+            new_count = 1
+        
+        return {'success': True, 'count': new_count}
+    except Exception as e:
+        print(f"Error adding sparkle: {e}")
+        return {'success': False, 'error': str(e)}, 500
+
+@bp.route('/api/articles/<article_slug>/metadata')
+def get_article_metadata(article_slug):
+    """Get article metadata including reading time"""
+    try:
+        response = supabase.table('articles_metadata').select('*').eq('article_slug', article_slug).execute()
+        
+        if response.data:
+            return {'success': True, 'data': response.data[0]}
+        else:
+            return {'success': False, 'error': 'Article not found'}, 404
+    except Exception as e:
+        print(f"Error getting article metadata: {e}")
+        return {'success': False, 'error': str(e)}, 500
