@@ -3,18 +3,26 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{% block meta_description %}Thoughtful analysis of SaaS marketing, AI developments, and tech innovation by SparkPubs.{% endblock %}">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.svg') }}">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="article">
-    <meta property="og:title" content="{% block og_title %}Tesla Analysis & EV Industry Insights{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}Data-driven analysis of electric vehicle industry trends and Tesla coverage{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}✨ SparkPubs - Thoughtful Tech Analysis{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Thoughtful analysis of SaaS marketing, AI developments, and tech innovation. Deep dives into business strategy and market dynamics.{% endblock %}">
+    <meta property="og:url" content="https://sparkpubs.com{% block og_url %}{% endblock %}">
+    <meta property="og:site_name" content="SparkPubs">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:title" content="{% block twitter_title %}Tesla Analysis & EV Industry Insights{% endblock %}">
-    <meta property="twitter:description" content="{% block twitter_description %}Data-driven analysis of electric vehicle industry trends{% endblock %}">
+    <meta property="twitter:title" content="{% block twitter_title %}✨ SparkPubs - Thoughtful Tech Analysis{% endblock %}">
+    <meta property="twitter:description" content="{% block twitter_description %}Thoughtful analysis of SaaS marketing, AI developments, and tech innovation.{% endblock %}">
+    <meta property="twitter:site" content="@sparkpubs">
     
-    <title>{% block title %}Tesla Analysis & EV Industry Insights{% endblock %}</title>
+    <title>{% block title %}✨ SparkPubs - Thoughtful Tech Analysis{% endblock %}</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
