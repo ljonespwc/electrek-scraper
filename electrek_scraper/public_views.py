@@ -26,10 +26,10 @@ def index():
     articles = [
         {
             'title': 'The Business of Hate: Anti-Tesla Blog by the Numbers',
-            'description': 'I analyzed 2,962 articles and 156,636 comments from the EV publication, Electrek. The results reveal a not-so-clever business model built on Tesla hate.',
+            'description': 'How one Tesla superfan transformed into Tesla\'s harshest critic and built a business model around manufactured outrage.',
             'url': 'public.fred_lambert_sellout',
             'template_path': 'articles/fred_lambert_sellout.html',
-            'category': 'Analysis'
+            'category': 'Lance Jones'
         }
     ]
     

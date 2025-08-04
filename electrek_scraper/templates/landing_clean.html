@@ -40,7 +40,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 0 2rem;
         }
@@ -86,12 +86,12 @@
         .article-card {
             border: 1px solid #e6e6e6;
             border-radius: 8px;
-            padding: 1.5rem;
+            padding: 2rem;
             margin-bottom: 1.5rem;
             transition: all 0.2s ease;
             background: #ffffff;
             display: flex;
-            gap: 1.5rem;
+            gap: 2rem;
             align-items: flex-start;
             text-decoration: none;
             color: inherit;
@@ -111,16 +111,24 @@
 
         .article-image {
             flex-shrink: 0;
-            width: 200px;
-            height: 134px;
+            width: 280px;
+            height: 200px;
             background: #f0f0f0;
-            border-radius: 4px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #999;
             font-size: 0.875rem;
             font-weight: 500;
+            overflow: hidden;
+        }
+        
+        .article-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
         }
 
         .article-content {
@@ -129,8 +137,8 @@
         }
 
         .article-content h3 {
-            margin: 0 0 0.75rem 0;
-            font-size: 1.375rem;
+            margin: 0 0 1rem 0;
+            font-size: 1.5rem;
             font-weight: 700;
             color: #1a1a1a;
             letter-spacing: -0.01em;
@@ -140,12 +148,12 @@
 
         .article-excerpt {
             color: #757575;
-            line-height: 1.5;
-            margin-bottom: 1rem;
-            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            font-size: 1.125rem;
             font-weight: 400;
             display: -webkit-box;
-            -webkit-line-clamp: 2;
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -254,12 +262,12 @@
 <body>
     <div class="container">
         <header class="hero-section">
-            <h1>Tesla Analysis & EV Industry Insights</h1>
-            <p class="hero-subtitle">Data-driven analysis of electric vehicle industry trends and media coverage</p>
+            <h1>✨ SparkPubs</h1>
+            <p class="hero-subtitle">Thoughtful analysis of SaaS marketing, AI developments, and tech innovation.</p>
         </header>
 
         <section class="articles-section">
-            <h2>Featured Articles</h2>
+            <h2>Latest Analysis</h2>
             <div class="article-grid">
                 {% for article in articles %}
                 <a href="{{ url_for(article.url) }}" class="article-card">
@@ -272,14 +280,10 @@
                                 <div class="article-meta-separator"></div>
                                 <span class="article-type">{{ article.category }}</span>
                             </div>
-                            <div class="chart-preview">
-                                <i class="fas fa-chart-line"></i>
-                                <span>Interactive charts</span>
-                            </div>
                         </div>
                     </div>
                     <div class="article-image">
-                        Data Visualization
+                        <img src="{{ url_for('static', filename='img/whack-a-musk.png') }}" alt="Whack-a-Musk arcade game">
                     </div>
                 </a>
                 {% endfor %}
