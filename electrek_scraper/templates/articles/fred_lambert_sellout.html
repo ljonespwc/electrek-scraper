@@ -17,7 +17,7 @@
     <header>
         <h1>The Business of Hate: Anti-Tesla Blog by the Numbers</h1>
         <div class="article-meta">
-            <span class="author">By Lance Jones</span>
+            <span class="author">By Lance Jones • <a href="https://twitter.com/RealLanceJones" target="_blank" class="twitter-link">@RealLanceJones</a></span>
             <span class="reading-time">{{ reading_time }}</span>
             {% if show_sparkles %}
             <span class="sparkle-display">✨ {{ sparkle_count }}</span>
@@ -352,7 +352,7 @@
     <p><strong>The numbers don't lie. But apparently, some blogs do.</strong></p>
 
     <!-- Sparkle Section -->
-    <div style="text-align: center; margin: 3rem 0; padding: 2rem; background: #f9f9f9; border-radius: 8px;">
+    <div style="text-align: center; margin: 3rem 0; padding: 2rem; background: #f9f9f9; border-radius: 8px; border: 1px solid #e0e0e0;">
         <div id="sparkle-section">
             <div class="sparkle-count-display">
                 <span id="current-sparkle-count">{{ sparkle_count }}</span>
@@ -365,6 +365,16 @@
             <div id="user-progress" style="margin-top: 1rem; font-size: 0.9rem; color: #666; display: none;">
                 <span id="user-progress-text">Your sparkles: 0/100</span>
             </div>
+        </div>
+    </div>
+
+    <!-- Twitter Follow Section -->
+    <div style="text-align: center; margin: 2rem 0; padding: 1.5rem; background: linear-gradient(135deg, #ff6b00, #ffd700); border-radius: 8px; color: white;">
+        <div class="twitter-follow-section">
+            <h3 style="margin: 0 0 1rem 0; font-size: 1.2rem; font-weight: 600;">Enjoyed this analysis? ✨</h3>
+            <a href="https://twitter.com/RealLanceJones" target="_blank" class="twitter-follow-btn">
+                🐦 Follow @RealLanceJones
+            </a>
         </div>
     </div>
 
@@ -614,8 +624,8 @@ function getCelebrationMessage(milestone) {
     switch(milestone) {
         case 10: return '🎯 10 sparkles! You\'re getting the hang of this!';
         case 25: return '🔥 25 sparkles! You\'re on fire!';
-        case 50: return '⭐ 50 sparkles! Halfway to legend status!';
-        case 100: return '🏆 100 sparkles! You\'re a SparkPubs legend!';
+        case 50: return '⭐ 50 sparkles! Halfway to legend status! Follow @RealLanceJones for more insights!';
+        case 100: return '🏆 100 sparkles! You\'re a SparkPubs legend! Follow @RealLanceJones for legendary analysis!';
         default: return 'Thank you for the sparkle! ✨';
     }
 }
@@ -1017,6 +1027,72 @@ function createMilestoneCelebration(centerX, centerY, milestone) {
 
 .sparkle-button:active:not(:disabled) {
     transform: translateY(0) scale(0.98);
+}
+
+/* Twitter Element Styling */
+.twitter-link {
+    color: #ff6b00;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.twitter-link:hover {
+    color: #e55a00;
+    text-decoration: underline;
+}
+
+.twitter-follow-btn {
+    display: inline-block;
+    background: #1a1a1a;
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 1rem;
+    border: 2px solid #333;
+    transition: all 0.3s ease;
+}
+
+.twitter-follow-btn:hover {
+    background: #000;
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    border-color: #555;
+}
+
+.twitter-follow-btn:active {
+    transform: translateY(0);
+}
+
+.twitter-follow-section {
+    position: relative;
+}
+
+.twitter-follow-section::before {
+    content: '✨';
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    font-size: 1.5rem;
+    animation: float 2s ease-in-out infinite;
+}
+
+.twitter-follow-section::after {
+    content: '✨';
+    position: absolute;
+    top: -5px;
+    right: 30px;
+    font-size: 1.2rem;
+    animation: float 2s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
 }
 </style>
 {% endblock %}

@@ -29,7 +29,7 @@ def index():
             'description': 'How one Tesla superfan transformed into Tesla\'s harshest critic and built a business model around manufactured outrage.',
             'url': 'public.fred_lambert_sellout',
             'template_path': 'articles/fred_lambert_sellout.html',
-            'category': 'Lance Jones'
+            'category': 'Lance Jones (@RealLanceJones)'
         }
     ]
     
